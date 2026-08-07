@@ -1,0 +1,43 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c5b7257e3e51b4223979dbf3cae48329, type: 3}
+  m_Name: BattleStatFormulaConfig
+  m_EditorClassIdentifier: Assembly-CSharp::BattleStatFormulaConfig
+  baseHp: 50
+  hpPerConstitution: 10
+  baseMp: 20
+  mpPerWisdom: 5
+  mpPerIntelligence: 2
+  basePhysicalAttack: 5
+  physicalAttackPerStrength: 2
+  physicalAttackPerDexterity: 0.5
+  baseMagicAttack: 5
+  magicAttackPerIntelligence: 2
+  magicAttackPerWisdom: 0.5
+  basePhysicalDefense: 0
+  physicalDefensePerConstitution: 1.5
+  physicalDefensePerStrength: 0.25
+  baseMagicResistance: 0
+  magicResistancePerWisdom: 1.5
+  magicResistancePerIntelligence: 0.25
+  baseAccuracy: 75
+  accuracyPerDexterity: 1.5
+  accuracyPerLuck: 0.25
+  baseEvasion: 5
+  evasionPerAgility: 1
+  evasionPerLuck: 0.2
+  baseCriticalChance: 5
+  criticalChancePerDexterity: 0.25
+  criticalChancePerLuck: 0.25
+  baseCriticalDamage: 150
+  baseSpeed: 85
+  agilityToSpeed: 1

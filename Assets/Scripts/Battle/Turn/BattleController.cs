@@ -9,6 +9,10 @@ public sealed class BattleController : CBehaviour
 {
     private const float ActionValueEpsilon = 0.0001f;
 
+    [Header("Battle Flow")]
+    [SerializeField]
+    private bool startAutomatically = true;
+
     [Header("Action Value")]
     [SerializeField, Min(0.0001f)]
     private float actionValueConstant = 10000f;
@@ -29,6 +33,8 @@ public sealed class BattleController : CBehaviour
     public event Action<BattleUnit> TurnStarted;
     public event Action<BattleUnit> TurnEnded;
     public event Action<BattleUnit> ParticipantJoined;
+    public event Action<BattleUnit> PlayerActionRequested;
+    public event Action<BattleUnit> AIActionRequested;
     public event Action<BattleState> BattleEnded;
 
     public BattleState State { get; private set; } = BattleState.Idle;
@@ -37,6 +43,12 @@ public sealed class BattleController : CBehaviour
     public float ElapsedActionValue { get; private set; }
     public BattleUnit CurrentUnit { get; private set; }
     public IReadOnlyList<BattleUnit> Participants => participants;
+
+    protected override void OnStarted()
+    {
+        if (startAutomatically)
+            StartBattle();
+    }
 
     public void StartBattle()
     {
@@ -172,10 +184,63 @@ public sealed class BattleController : CBehaviour
             CurrentUnit = nextUnit;
             State = BattleState.WaitingForAction;
             TurnStarted?.Invoke(nextUnit);
+
+            if (CurrentUnit == nextUnit &&
+                State == BattleState.WaitingForAction)
+            {
+                RequestAction(nextUnit);
+            }
+
             return;
         }
 
         TryEndBattle();
+    }
+
+    private void RequestAction(BattleUnit unit)
+    {
+        switch (unit.ControlType)
+        {
+            case BattleControlType.Player:
+                RequestPlayerAction(unit);
+                break;
+
+            case BattleControlType.AI:
+                RequestAIAction(unit);
+                break;
+
+            default:
+                throw new ArgumentOutOfRangeException(
+                    nameof(unit.ControlType),
+                    unit.ControlType,
+                    null);
+        }
+    }
+
+    private void RequestPlayerAction(BattleUnit unit)
+    {
+        if (PlayerActionRequested == null)
+        {
+            Debug.LogWarning(
+                $"{unit.name}의 플레이어 행동 요청을 처리할 대상이 없습니다.",
+                unit);
+            return;
+        }
+
+        PlayerActionRequested.Invoke(unit);
+    }
+
+    private void RequestAIAction(BattleUnit unit)
+    {
+        if (AIActionRequested == null)
+        {
+            Debug.LogWarning(
+                $"{unit.name}의 AI 행동 요청을 처리할 대상이 없습니다.",
+                unit);
+            return;
+        }
+
+        AIActionRequested.Invoke(unit);
     }
 
     private void AdvanceTimeline(float actionValue)
