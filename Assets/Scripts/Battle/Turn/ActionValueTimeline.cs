@@ -105,13 +105,20 @@ public sealed class ActionValueTimeline
         }
     }
 
-    public void CompleteTurn(BattleUnit unit)
+    public void CompleteTurn(
+        BattleUnit unit,
+        float actionValueMultiplier = 1f)
     {
+        if (actionValueMultiplier <= 0f)
+            throw new ArgumentOutOfRangeException(
+                nameof(actionValueMultiplier));
+
         Entry entry = FindEntry(unit);
         float speed = GetValidSpeed(unit);
 
         entry.LastSpeed = speed;
-        entry.RemainingActionValue += CalculateBaseActionValue(speed);
+        entry.RemainingActionValue +=
+            CalculateBaseActionValue(speed) * actionValueMultiplier;
     }
 
     public void AdvanceAction(BattleUnit unit, float ratio)

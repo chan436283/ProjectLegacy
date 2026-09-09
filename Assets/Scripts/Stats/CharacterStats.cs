@@ -4,6 +4,9 @@ using UnityEngine;
 [Serializable]
 public sealed class CharacterStats
 {
+    [field: NonSerialized]
+    public event Action<float, float> HpChanged;
+
     [field: SerializeField]
     public int Level { get; private set; } = 1;
 
@@ -20,6 +23,9 @@ public sealed class CharacterStats
     public float CurrentMp { get; private set; }
 
     public bool IsDead => CurrentHp <= 0f;
+    public float HpRatio => Battle.MaxHp.Value > 0f
+        ? CurrentHp / Battle.MaxHp.Value
+        : 0f;
 
     public void Initialize(BattleStatFormulaConfig formula)
     {
@@ -114,12 +120,18 @@ public sealed class CharacterStats
         {
             ClampResources();
         }
+
+        NotifyHpChanged();
     }
 
     public float TakeDamage(float amount)
     {
         float applied = Mathf.Clamp(amount, 0f, CurrentHp);
         CurrentHp -= applied;
+
+        if (applied > 0f)
+            NotifyHpChanged();
+
         return applied;
     }
 
@@ -127,7 +139,12 @@ public sealed class CharacterStats
     {
         float previous = CurrentHp;
         CurrentHp = Mathf.Clamp(CurrentHp + Math.Max(0f, amount), 0f, Battle.MaxHp.Value);
-        return CurrentHp - previous;
+        float recovered = CurrentHp - previous;
+
+        if (recovered > 0f)
+            NotifyHpChanged();
+
+        return recovered;
     }
 
     public bool SpendMp(float amount)
@@ -153,11 +170,23 @@ public sealed class CharacterStats
     {
         CurrentHp = Battle.MaxHp.Value;
         CurrentMp = Battle.MaxMp.Value;
+        NotifyHpChanged();
+    }
+
+    public void RefreshResourceLimits()
+    {
+        ClampResources();
+        NotifyHpChanged();
     }
 
     private void ClampResources()
     {
-        CurrentHp = Mathf.Clamp(CurrentHp, 0f, Battle.MaxHp.Value);
-        CurrentMp = Mathf.Clamp(CurrentMp, 0f, Battle.MaxMp.Value);
+        CurrentHp = Mathf.Clamp(CurrentHp, 0f, Math.Max(0f, Battle.MaxHp.Value));
+        CurrentMp = Mathf.Clamp(CurrentMp, 0f, Math.Max(0f, Battle.MaxMp.Value));
+    }
+
+    private void NotifyHpChanged()
+    {
+        HpChanged?.Invoke(CurrentHp, Battle.MaxHp.Value);
     }
 }
