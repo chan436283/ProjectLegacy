@@ -26,6 +26,6 @@ public sealed class DamageEffect : BattleEffect
             _ => throw new System.ArgumentOutOfRangeException()
         };
 
-        target.ReceiveDamage(sourceValue * power + flatAmount);
+        target.ReceiveDamage(sourceValue * power + flatAmount, BattleDamageSource.DirectAttack);
     }
 }

@@ -27,14 +27,17 @@ public sealed class BattleSkill : ScriptableObject
     [SerializeField, Min(0.0001f)]
     private float actionValueMultiplier = 1f;
 
-    [Header("Animation")]
-    [SerializeField]
-    private SkillAnimationSettings animation = new();
+    [SerializeReference]
+    private List<SkillSequenceStep> sequence = new()
+    {
+        new ApplyEffectsStep(),
+        new PlayAnimationStep()
+    };
 
     [SerializeReference]
     private List<BattleEffect> effects = new();
 
-    public SkillAnimationSettings Animation => animation;
+    public IReadOnlyList<SkillSequenceStep> Sequence => sequence;
     public string SkillId => skillId;
     public string DisplayName => displayName;
     public Sprite Icon => icon;
@@ -46,7 +49,7 @@ public sealed class BattleSkill : ScriptableObject
     public bool CanUse(BattleUnit actor)
     {
         return actor != null &&
-               actor.CanAct &&
+               actor.CanUseSkill(this) &&
                actor.Stats.CurrentMp >= mpCost;
     }
 

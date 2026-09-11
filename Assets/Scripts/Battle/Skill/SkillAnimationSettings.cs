@@ -4,20 +4,24 @@ using UnityEngine;
 [Serializable]
 public sealed class SkillAnimationSettings
 {
-    [Tooltip("스킬 실행 시 재생할 애니메이션. None은 생략합니다.")]
-    [SerializeField] private SkillAnimationType startAnimation;
+    [Tooltip("Animator 파라미터 이름. 비워두면 애니메이션을 실행하지 않습니다.")]
+    [SerializeField] private string parameterKey;
+    [SerializeField] private ParameterType parameterType;
+    [SerializeField] private bool boolValue = true;
 
-    [Tooltip("시작 모션 이후 유지할 애니메이션. None은 생략합니다.")]
-    [SerializeField] private SkillAnimationType loopAnimation;
-
-    [Tooltip("유지 상태가 해제될 때 재생할 애니메이션. None은 생략합니다.")]
-    [SerializeField] private SkillAnimationType endAnimation;
-
-    [Tooltip("유지 모션과 연결할 StatusEffect의 상태 ID. 유지 모션을 사용할 때 지정합니다.")]
+    [Tooltip("Bool에만 사용합니다. 연결된 상태가 해제되면 false로 설정합니다. 비워두면 설정값을 유지합니다.")]
     [SerializeField] private string maintainWhileStatusId;
 
-    public SkillAnimationType StartAnimation => startAnimation;
-    public SkillAnimationType LoopAnimation => loopAnimation;
-    public SkillAnimationType EndAnimation => endAnimation;
+    public string ParameterKey => parameterKey;
+    public ParameterType ParameterType => parameterType;
+    public bool BoolValue => boolValue;
     public string MaintainWhileStatusId => maintainWhileStatusId;
+
+    public SkillAnimationSettings() { }
+
+    public SkillAnimationSettings(string triggerKey)
+    {
+        parameterKey = triggerKey;
+        parameterType = ParameterType.Trigger;
+    }
 }

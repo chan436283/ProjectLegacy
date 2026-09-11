@@ -33,6 +33,8 @@ public sealed class PlayerActionUI : CUIBehaviour
 
     private BattleUnit currentUnit;
     private Tween visibilityTween;
+    private bool isSelectingTarget;
+    private PlayerActionButtonView lastCommandButton;
 
     public event Action<BattleUnit, BattleCommandType> CommandSelected;
 
@@ -97,6 +99,8 @@ public sealed class PlayerActionUI : CUIBehaviour
         }
 
         currentUnit = unit;
+        isSelectingTarget = false;
+        lastCommandButton = attackButton;
         IsVisible = true;
         canvasGroup.alpha = 1f;
         canvasGroup.interactable = true;
@@ -114,6 +118,7 @@ public sealed class PlayerActionUI : CUIBehaviour
     public void Hide(bool immediate = false)
     {
         IsVisible = false;
+        isSelectingTarget = false;
         currentUnit = null;
         canvasGroup.interactable = false;
         canvasGroup.blocksRaycasts = false;
@@ -134,23 +139,44 @@ public sealed class PlayerActionUI : CUIBehaviour
             .OnComplete(() => canvasGroup.alpha = 0f);
     }
 
+    public void SetTargetSelectionMode(bool selecting, bool restoreFocus = false)
+    {
+        isSelectingTarget = selecting;
+        if (!IsVisible) return;
+
+        // Finish the opening animation so its callback cannot reclaim focus.
+        visibilityTween?.Kill();
+        RectTransform.localScale = Vector3.one;
+        canvasGroup.alpha = selecting ? 0.45f : 1f;
+        canvasGroup.interactable = !selecting;
+        // Disabled commands must still absorb clicks over the battle field.
+        canvasGroup.blocksRaycasts = true;
+
+        if (selecting)
+            ClearSelection();
+        else if (restoreFocus)
+            SelectDefaultButton();
+    }
+
     private void SelectDefaultButton()
     {
-        if (!IsVisible ||
-            attackButton == null ||
-            attackButton.Button == null)
+        PlayerActionButtonView selectedButton = lastCommandButton != null
+            ? lastCommandButton : attackButton;
+        if (!IsVisible || isSelectingTarget ||
+            selectedButton == null ||
+            selectedButton.Button == null)
             return;
 
         if (EventSystem.current != null)
             EventSystem.current.SetSelectedGameObject(
-                attackButton.Button.gameObject);
+                selectedButton.Button.gameObject);
         else
-            attackButton.SetSelected(true);
+            selectedButton.SetSelected(true);
     }
 
     private void SelectCommand(BattleCommandType commandType)
     {
-        if (!IsVisible || currentUnit == null)
+        if (!IsVisible || isSelectingTarget || currentUnit == null)
             return;
 
         if (CommandSelected == null)
@@ -162,7 +188,9 @@ public sealed class PlayerActionUI : CUIBehaviour
         }
 
         BattleUnit selectedUnit = currentUnit;
-        // A successful action ends the turn; OnTurnEnded then hides the UI.
+        lastCommandButton = commandType == BattleCommandType.Defend
+            ? defendButton : attackButton;
+
         CommandSelected.Invoke(selectedUnit, commandType);
     }
 
@@ -207,6 +235,7 @@ public sealed class PlayerActionUI : CUIBehaviour
         canvasGroup.interactable = false;
         canvasGroup.blocksRaycasts = false;
         IsVisible = false;
+        isSelectingTarget = false;
         currentUnit = null;
     }
 }

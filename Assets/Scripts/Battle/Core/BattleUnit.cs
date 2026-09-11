@@ -16,6 +16,9 @@ public sealed class BattleUnit : CBehaviour
     [SerializeField]
     private CharacterStatsComponent statsComponent;
 
+    [SerializeField]
+    private BattleUnitView view;
+
     [Header("Battle Actions")]
     [SerializeField]
     private BattleSkill basicAttackSkill;
@@ -26,11 +29,47 @@ public sealed class BattleUnit : CBehaviour
     [SerializeField]
     private BattleSkill defendSkill;
 
+    [Header("AI Action Patterns")]
+    [SerializeField] private List<AIActionSet> aiActionSets = new();
+    [SerializeField, Min(0)] private int initialAIActionSetIndex;
+
+    public AIActionPattern AIActionPattern { get; } = new();
+    public IReadOnlyList<AIActionSet> AIActionSets => aiActionSets;
+
+    public void SetAIActionSet(int index)
+    {
+        if (index < 0 || index >= aiActionSets.Count)
+            throw new ArgumentOutOfRangeException(nameof(index));
+        AIActionPattern.SetActionSet(aiActionSets[index]);
+    }
+
+    public void ResetAIActionPattern()
+    {
+        AIActionPattern.SetActionSet(initialAIActionSetIndex >= 0 &&
+            initialAIActionSetIndex < aiActionSets.Count ? aiActionSets[initialAIActionSetIndex] : null);
+    }
+
+    // Keep CanAct as timeline/target eligibility; action restrictions must not hide living targets.
+    public bool CanPerformActions => CanAct && !statuses.Exists(status => status.BlocksAllActions);
+
+    public bool CanUseSkill(BattleSkill skill)
+    {
+        return skill != null && CanPerformActions &&
+            !statuses.Exists(status => !status.AllowsSkill(this, skill));
+    }
+
     private readonly List<BattleStatus> statuses = new();
+
+    public event Action StatusesChanged;
+    public event Action<BattleDamageInfo> DamageReceived;
+    public bool IsDefending => HasStatus("defend");
+
+    public bool HasStatus(string statusId) => statuses.Exists(status => status.StatusId == statusId);
 
     public BattleSide Side => side;
     public BattleControlType ControlType => controlType;
     public CharacterStats Stats => statsComponent.Stats;
+    public BattleUnitView View => view;
     public BattleSkill BasicAttackSkill => basicAttackSkill;
     public IReadOnlyList<BattleSkill> Skills => skills;
     public BattleSkill DefendSkill => defendSkill;
@@ -67,6 +106,7 @@ public sealed class BattleUnit : CBehaviour
             statuses.RemoveAt(i);
             expired.OnRemove(Stats);
         }
+        StatusesChanged?.Invoke();
     }
 
     public void ApplyStatus(BattleStatus status)
@@ -89,18 +129,25 @@ public sealed class BattleUnit : CBehaviour
             statuses.Add(status);
             status.OnApply(Stats);
         }
+        StatusesChanged?.Invoke();
     }
 
-    public float ReceiveDamage(float amount)
+    public float ReceiveDamage(float amount, BattleDamageSource source = BattleDamageSource.DirectAttack)
     {
+        bool wasDefending = IsDefending;
         float finalAmount = amount;
         foreach (BattleStatus status in statuses)
             finalAmount = status.ModifyIncomingDamage(finalAmount);
-        return Stats.TakeDamage(finalAmount);
+        float applied = Stats.TakeDamage(finalAmount);
+        DamageReceived?.Invoke(new BattleDamageInfo(applied, source, wasDefending, Stats.IsDead));
+        return applied;
     }
 
     protected override void OnAwake()
     {
+        if (view == null)
+            view = GetComponent<BattleUnitView>();
+
         if (statsComponent == null)
             statsComponent = GetComponent<CharacterStatsComponent>();
 

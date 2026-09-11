@@ -1,0 +1,86 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fa10cc30de914e1d9252f120d37de36b, type: 3}
+  m_Name: SK_Common_OrcAttack
+  m_EditorClassIdentifier: Assembly-CSharp::BattleSkill
+  skillId: orc_attack
+  displayName: OrcAttack
+  icon: {fileID: 0}
+  mpCost: 0
+  targetType: 3
+  actionValueMultiplier: 1
+  sequence:
+  - rid: 101
+  - rid: 102
+  - rid: 103
+  - rid: 104
+  - rid: 105
+  - rid: 106
+  effects:
+  - rid: 441038493583409223
+  references:
+    version: 2
+    RefIds:
+    - rid: 101
+      type: {class: DashToTargetStep, ns: , asm: Assembly-CSharp}
+      data:
+        animation:
+          parameterKey: Move
+          parameterType: 1
+          boolValue: 1
+          maintainWhileStatusId: 
+        startDelay: 0
+        duration: 0.8
+        moveType: 0
+        faceMovementDirection: 1
+        jumpHeight: 1
+        stoppingDistance: 0.8
+    - rid: 102
+      type: {class: PlayAnimationStep, ns: , asm: Assembly-CSharp}
+      data:
+        animation:
+          parameterKey: Attack
+          parameterType: 0
+          boolValue: 1
+          maintainWhileStatusId: 
+    - rid: 103
+      type: {class: WaitForAnimationSignalStep, ns: , asm: Assembly-CSharp}
+      data:
+        signal: Hit
+        timeout: 3
+    - rid: 104
+      type: {class: ApplyEffectsStep, ns: , asm: Assembly-CSharp}
+      data: 
+    - rid: 105
+      type: {class: WaitForAnimationSignalStep, ns: , asm: Assembly-CSharp}
+      data:
+        signal: Complete
+        timeout: 3
+    - rid: 106
+      type: {class: ReturnToOriginStep, ns: , asm: Assembly-CSharp}
+      data:
+        animation:
+          parameterKey: Move
+          parameterType: 1
+          boolValue: 1
+          maintainWhileStatusId: 
+        startDelay: 0.3
+        duration: 0.8
+        moveType: 0
+        faceMovementDirection: 1
+        jumpHeight: 1
+    - rid: 441038493583409223
+      type: {class: DamageEffect, ns: , asm: Assembly-CSharp}
+      data:
+        damageType: 0
+        power: 1
+        flatAmount: 0

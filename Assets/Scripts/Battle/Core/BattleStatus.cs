@@ -20,6 +20,9 @@ public abstract class BattleStatus
         return RemainingTurns == 0;
     }
 
+    public virtual bool BlocksAllActions => false;
+    public virtual bool AllowsSkill(BattleUnit actor, BattleSkill skill) => true;
+
     public virtual void OnApply(CharacterStats stats) { }
     public virtual void OnRemove(CharacterStats stats) { }
 

@@ -18,11 +18,10 @@ MonoBehaviour:
   mpCost: 0
   targetType: 0
   actionValueMultiplier: 1
-  animation:
-    startAnimation: 3
-    loopAnimation: 4
-    endAnimation: 5
-    maintainWhileStatusId: "defend"
+  sequence:
+  - rid: 101
+  - rid: 102
+  - rid: 103
   effects:
   - rid: 1
   references:
@@ -35,3 +34,18 @@ MonoBehaviour:
         statusEffectType: 0
         damageReduction: 0.5
         durationTurns: 1
+    - rid: 101
+      type: {class: ApplyEffectsStep, ns: , asm: Assembly-CSharp}
+      data: {}
+    - rid: 102
+      type: {class: PlayAnimationStep, ns: , asm: Assembly-CSharp}
+      data:
+        animation:
+          parameterKey: IsDefend
+          parameterType: 1
+          boolValue: 1
+          maintainWhileStatusId: "defend"
+    - rid: 103
+      type: {class: WaitStep, ns: , asm: Assembly-CSharp}
+      data:
+        duration: 2

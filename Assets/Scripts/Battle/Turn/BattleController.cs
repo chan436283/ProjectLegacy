@@ -14,6 +14,9 @@ public sealed class BattleController : CBehaviour
     [SerializeField]
     private bool startAutomatically = true;
 
+    [Tooltip("시작 시 참가자를 배치합니다. 비워두면 같은 오브젝트의 BattleFormation을 사용합니다.")]
+    [SerializeField] private BattleFormation formation;
+
     [Header("Action Value")]
     [SerializeField, Min(0.0001f)]
     private float actionValueConstant = 10000f;
@@ -65,6 +68,10 @@ public sealed class BattleController : CBehaviour
         if (participants.Count == 0)
             throw new InvalidOperationException("전투 참가자가 없습니다.");
 
+        if (formation == null) formation = GetComponent<BattleFormation>();
+        if (formation != null && formation.isActiveAndEnabled)
+            formation.PlaceParticipants(participants);
+
         RefreshAllyStatusViews();
 
         RoundNumber = 0;
@@ -83,16 +90,22 @@ public sealed class BattleController : CBehaviour
         }
     }
 
+    public void BeginAction(BattleUnit actor)
+    {
+        if (State != BattleState.WaitingForAction || CurrentUnit == null || CurrentUnit != actor)
+            throw new InvalidOperationException("행동을 시작할 수 있는 유닛 턴이 없습니다.");
+
+        State = BattleState.ResolvingAction;
+    }
+
     public void CompleteCurrentTurn(float actionValueMultiplier = 1f)
     {
-        if (State != BattleState.WaitingForAction || CurrentUnit == null)
+        if (State != BattleState.ResolvingAction || CurrentUnit == null)
             throw new InvalidOperationException("종료할 수 있는 유닛 턴이 없습니다.");
 
         if (actionValueMultiplier <= 0f)
             throw new ArgumentOutOfRangeException(
                 nameof(actionValueMultiplier));
-
-        State = BattleState.ResolvingAction;
 
         BattleUnit completedUnit = CurrentUnit;
         timeline.CompleteTurn(completedUnit, actionValueMultiplier);
