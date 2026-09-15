@@ -1,0 +1,15 @@
+/Users/runa4362/Documents/ProjectLegacy/Tests/Progress/bin/Debug/net8.0/Progress
+/Users/runa4362/Documents/ProjectLegacy/Tests/Progress/bin/Debug/net8.0/Progress.deps.json
+/Users/runa4362/Documents/ProjectLegacy/Tests/Progress/bin/Debug/net8.0/Progress.runtimeconfig.json
+/Users/runa4362/Documents/ProjectLegacy/Tests/Progress/bin/Debug/net8.0/Progress.dll
+/Users/runa4362/Documents/ProjectLegacy/Tests/Progress/bin/Debug/net8.0/Progress.pdb
+/Users/runa4362/Documents/ProjectLegacy/Tests/Progress/obj/Debug/net8.0/Progress.GeneratedMSBuildEditorConfig.editorconfig
+/Users/runa4362/Documents/ProjectLegacy/Tests/Progress/obj/Debug/net8.0/Progress.AssemblyInfoInputs.cache
+/Users/runa4362/Documents/ProjectLegacy/Tests/Progress/obj/Debug/net8.0/Progress.AssemblyInfo.cs
+/Users/runa4362/Documents/ProjectLegacy/Tests/Progress/obj/Debug/net8.0/Progress.csproj.CoreCompileInputs.cache
+/Users/runa4362/Documents/ProjectLegacy/Tests/Progress/obj/Debug/net8.0/Progress.sourcelink.json
+/Users/runa4362/Documents/ProjectLegacy/Tests/Progress/obj/Debug/net8.0/Progress.dll
+/Users/runa4362/Documents/ProjectLegacy/Tests/Progress/obj/Debug/net8.0/refint/Progress.dll
+/Users/runa4362/Documents/ProjectLegacy/Tests/Progress/obj/Debug/net8.0/Progress.pdb
+/Users/runa4362/Documents/ProjectLegacy/Tests/Progress/obj/Debug/net8.0/Progress.genruntimeconfig.cache
+/Users/runa4362/Documents/ProjectLegacy/Tests/Progress/obj/Debug/net8.0/ref/Progress.dll
