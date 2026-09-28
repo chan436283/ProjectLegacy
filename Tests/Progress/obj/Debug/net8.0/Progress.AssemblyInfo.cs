@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Progress")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+84f9711d0c99624ab0eeb0b4ee37cb4214d92c37")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+36779454b4f623ee6a8a54b888dad62cce3b25bc")]
 [assembly: System.Reflection.AssemblyProductAttribute("Progress")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Progress")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

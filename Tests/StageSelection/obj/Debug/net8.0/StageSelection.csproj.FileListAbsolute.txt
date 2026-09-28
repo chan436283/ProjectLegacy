@@ -1,0 +1,15 @@
+/Users/runa4362/Documents/ProjectLegacy/Tests/StageSelection/bin/Debug/net8.0/StageSelection
+/Users/runa4362/Documents/ProjectLegacy/Tests/StageSelection/bin/Debug/net8.0/StageSelection.deps.json
+/Users/runa4362/Documents/ProjectLegacy/Tests/StageSelection/bin/Debug/net8.0/StageSelection.runtimeconfig.json
+/Users/runa4362/Documents/ProjectLegacy/Tests/StageSelection/bin/Debug/net8.0/StageSelection.dll
+/Users/runa4362/Documents/ProjectLegacy/Tests/StageSelection/bin/Debug/net8.0/StageSelection.pdb
+/Users/runa4362/Documents/ProjectLegacy/Tests/StageSelection/obj/Debug/net8.0/StageSelection.GeneratedMSBuildEditorConfig.editorconfig
+/Users/runa4362/Documents/ProjectLegacy/Tests/StageSelection/obj/Debug/net8.0/StageSelection.AssemblyInfoInputs.cache
+/Users/runa4362/Documents/ProjectLegacy/Tests/StageSelection/obj/Debug/net8.0/StageSelection.AssemblyInfo.cs
+/Users/runa4362/Documents/ProjectLegacy/Tests/StageSelection/obj/Debug/net8.0/StageSelection.csproj.CoreCompileInputs.cache
+/Users/runa4362/Documents/ProjectLegacy/Tests/StageSelection/obj/Debug/net8.0/StageSelection.sourcelink.json
+/Users/runa4362/Documents/ProjectLegacy/Tests/StageSelection/obj/Debug/net8.0/StageSelection.dll
+/Users/runa4362/Documents/ProjectLegacy/Tests/StageSelection/obj/Debug/net8.0/refint/StageSelection.dll
+/Users/runa4362/Documents/ProjectLegacy/Tests/StageSelection/obj/Debug/net8.0/StageSelection.pdb
+/Users/runa4362/Documents/ProjectLegacy/Tests/StageSelection/obj/Debug/net8.0/StageSelection.genruntimeconfig.cache
+/Users/runa4362/Documents/ProjectLegacy/Tests/StageSelection/obj/Debug/net8.0/ref/StageSelection.dll

@@ -37,6 +37,8 @@ public sealed class PlayerActionButtonView : CUIBehaviour,
 
     private Vector2 normalPosition;
     private bool isInitialized;
+    private Tween positionTween;
+    private Tween colorTween;
 
     public event Action Clicked;
 
@@ -59,10 +61,8 @@ public sealed class PlayerActionButtonView : CUIBehaviour,
         if (button != null)
             button.onClick.RemoveListener(OnClicked);
 
-        RectTransform.DOKill();
-
-        if (label != null)
-            label.DOKill();
+        positionTween?.Kill();
+        colorTween?.Kill();
     }
 
     public void OnSelect(BaseEventData eventData)
@@ -95,10 +95,11 @@ public sealed class PlayerActionButtonView : CUIBehaviour,
             ? selectedTextColor
             : normalTextColor;
 
-        RectTransform.DOKill();
-
-        if (label != null)
-            label.DOKill();
+        // 같은 버튼의 공용 스케일 효과까지 중단하지 않도록 소유한 트윈만 정리합니다.
+        positionTween?.Kill();
+        colorTween?.Kill();
+        positionTween = null;
+        colorTween = null;
 
         if (immediate || transitionDuration <= 0f)
         {
@@ -110,16 +111,18 @@ public sealed class PlayerActionButtonView : CUIBehaviour,
             return;
         }
 
-        RectTransform
+        positionTween = RectTransform
             .DOAnchorPos(targetPosition, transitionDuration)
             .SetEase(Ease.OutQuad)
-            .SetUpdate(true);
+            .SetUpdate(true)
+            .OnKill(() => positionTween = null);
 
         if (label != null)
         {
-            label
+            colorTween = label
                 .DOColor(targetColor, transitionDuration)
-                .SetUpdate(true);
+                .SetUpdate(true)
+                .OnKill(() => colorTween = null);
         }
     }
 

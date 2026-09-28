@@ -1,4 +1,4 @@
-public enum AbilityStatType
+public enum PrimaryStatType
 {
     Strength,
     Constitution,

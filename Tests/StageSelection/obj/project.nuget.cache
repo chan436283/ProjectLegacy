@@ -1,0 +1,12 @@
+{
+  "version": 2,
+  "dgSpecHash": "ANBx/qaT4Vk=",
+  "success": true,
+  "projectFilePath": "/Users/runa4362/Documents/ProjectLegacy/Tests/StageSelection/StageSelection.csproj",
+  "expectedPackageFiles": [
+    "/Users/runa4362/.nuget/packages/microsoft.netcore.app.ref/8.0.30/microsoft.netcore.app.ref.8.0.30.nupkg.sha512",
+    "/Users/runa4362/.nuget/packages/microsoft.aspnetcore.app.ref/8.0.30/microsoft.aspnetcore.app.ref.8.0.30.nupkg.sha512",
+    "/Users/runa4362/.nuget/packages/microsoft.netcore.app.host.osx-arm64/8.0.30/microsoft.netcore.app.host.osx-arm64.8.0.30.nupkg.sha512"
+  ],
+  "logs": []
+}

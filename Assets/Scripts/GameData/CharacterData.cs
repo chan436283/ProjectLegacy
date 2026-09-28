@@ -30,7 +30,7 @@ public sealed class CharacterData
         stats = new CharacterStats();
 
         // 생성 입력의 기본값만 복사합니다. 임시 보정치와 참조는 공유하지 않습니다.
-        foreach (AbilityStatType type in Enum.GetValues(typeof(AbilityStatType)))
+        foreach (PrimaryStatType type in Enum.GetValues(typeof(PrimaryStatType)))
         {
             StatValue source = primaryStats.Get(type);
             if (source == null || float.IsNaN(source.BaseValue) ||
@@ -43,5 +43,23 @@ public sealed class CharacterData
         }
 
         stats.Initialize(formula);
+    }
+
+    internal static CharacterData Restore(
+        string id, string name, PrimaryStats primaryStats, int level,
+        float currentHp, float currentMp, BattleStatFormulaConfig formula)
+    {
+        if (string.IsNullOrWhiteSpace(id) || level < 1 ||
+            float.IsNaN(currentHp) || float.IsInfinity(currentHp) || currentHp < 0f ||
+            float.IsNaN(currentMp) || float.IsInfinity(currentMp) || currentMp < 0f)
+            throw new ArgumentException("저장된 캐릭터 정보가 올바르지 않습니다.");
+
+        var character = new CharacterData(name, primaryStats, formula);
+        character.id = id;
+        character.stats.SetLevel(level);
+        character.stats.Initialize(formula);
+        character.stats.TakeDamage(Math.Max(0f, character.stats.CurrentHp - currentHp));
+        character.stats.SpendMp(Math.Max(0f, character.stats.CurrentMp - currentMp));
+        return character;
     }
 }

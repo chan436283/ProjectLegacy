@@ -12,18 +12,18 @@ public sealed class PrimaryStats
     public StatValue Charisma = new(10f);
     public StatValue Luck = new(10f);
 
-    public StatValue Get(AbilityStatType type)
+    public StatValue Get(PrimaryStatType type)
     {
         return type switch
         {
-            AbilityStatType.Strength => Strength,
-            AbilityStatType.Constitution => Constitution,
-            AbilityStatType.Dexterity => Dexterity,
-            AbilityStatType.Agility => Agility,
-            AbilityStatType.Intelligence => Intelligence,
-            AbilityStatType.Wisdom => Wisdom,
-            AbilityStatType.Charisma => Charisma,
-            AbilityStatType.Luck => Luck,
+            PrimaryStatType.Strength => Strength,
+            PrimaryStatType.Constitution => Constitution,
+            PrimaryStatType.Dexterity => Dexterity,
+            PrimaryStatType.Agility => Agility,
+            PrimaryStatType.Intelligence => Intelligence,
+            PrimaryStatType.Wisdom => Wisdom,
+            PrimaryStatType.Charisma => Charisma,
+            PrimaryStatType.Luck => Luck,
             _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
         };
     }

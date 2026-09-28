@@ -56,4 +56,19 @@ public sealed class GameData
 
         return companions.Find(character => character.Id == characterId);
     }
+
+    private GameData(string familyName, CharacterData protagonist)
+    {
+        if (string.IsNullOrWhiteSpace(familyName))
+            throw new ArgumentException("가문명이 필요합니다.", nameof(familyName));
+        this.familyName = familyName.Trim();
+        this.protagonist = protagonist ?? throw new ArgumentNullException(nameof(protagonist));
+    }
+
+    internal static GameData Restore(string familyName, CharacterData protagonist, IEnumerable<CharacterData> companions)
+    {
+        var data = new GameData(familyName, protagonist);
+        foreach (CharacterData companion in companions) data.AddCompanion(companion);
+        return data;
+    }
 }
