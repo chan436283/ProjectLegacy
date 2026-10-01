@@ -8,7 +8,7 @@ using UnityEngine.UI;
 [DisallowMultipleComponent]
 public sealed class MapPoint : CBehaviour
 {
-    [SerializeField] private ExpeditionStage stage;
+    [SerializeField] private StageDefinition stage;
     [SerializeField] private Button button;
     [SerializeField] private bool available = true;
     [SerializeField] private GameObject selectedIndicator;
@@ -20,7 +20,7 @@ public sealed class MapPoint : CBehaviour
     private const float SelectionMoveDistance = 6f;
     private const float SelectionMoveDuration = 0.65f;
 
-    public ExpeditionStage Stage => stage;
+    public StageDefinition Stage => stage;
     public Button Button => button;
     public bool Available => available;
     public event Action<MapPoint> Clicked;

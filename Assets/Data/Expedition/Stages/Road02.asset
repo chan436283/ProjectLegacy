@@ -11,7 +11,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: d4ccf519dca14d00acbf28f5cac145e4, type: 3}
   m_Name: Road02
-  m_EditorClassIdentifier: Assembly-CSharp::ExpeditionStage
+  m_EditorClassIdentifier: Assembly-CSharp::StageDefinition
   stageId: road_02
   displayName: "{FamilyName} \uBD81\uB3D9 \uAC00\uB3C4"
   entryScene: GameScene

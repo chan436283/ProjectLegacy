@@ -26,7 +26,8 @@ public sealed class EstateController : CBehaviour
             }
 
             GameData data = GameSession.Current;
-            familyLabel.text = data.FamilyName + " 가문";
+            string familyName = string.IsNullOrWhiteSpace(data.FamilyName) ? "이름 없는 가문" : data.FamilyName.Trim();
+            familyLabel.text = GameTextFormatter.Format("{FamilyName} 가문", "FamilyName", familyName);
             characterLabel.text = "가주: " + data.Protagonist.Name;
             CharacterStats stats = data.Protagonist.Stats;
             var text = new StringBuilder();

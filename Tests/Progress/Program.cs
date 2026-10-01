@@ -54,18 +54,19 @@ static class Program
         Console.WriteLine("PASS: invalid input and roster mutation guards");
 
         CheckExpeditionSession();
+        ExpeditionTests.Run();
         CheckSaveRoundTrip(formula);
         CompanionGenerationTests.Run(formula);
     }
 
     static void CheckExpeditionSession()
     {
-        var run = new ExpeditionRunData(" forest ", " 숲 ", " GameScene ");
+        var run = new ExpeditionRun(" forest ", " 숲 ", " GameScene ");
         Check(run.StageId == "forest" && run.StageName == "숲" && run.EntryScene == "GameScene",
             "expedition entry snapshot trims fields");
-        Throws<ArgumentException>(() => new ExpeditionRunData("", "숲", "GameScene"));
-        Throws<ArgumentException>(() => new ExpeditionRunData("forest", " ", "GameScene"));
-        Throws<ArgumentException>(() => new ExpeditionRunData("forest", "숲", null));
+        Throws<ArgumentException>(() => new ExpeditionRun("", "숲", "GameScene"));
+        Throws<ArgumentException>(() => new ExpeditionRun("forest", " ", "GameScene"));
+        Throws<ArgumentException>(() => new ExpeditionRun("forest", "숲", null));
         GameSession.StartExpedition(run);
         Throws<ArgumentNullException>(() => GameSession.StartExpedition(null));
         Check(GameSession.CurrentExpedition == run, "invalid expedition preserves current run");
@@ -91,8 +92,11 @@ static class Program
             data.Protagonist.Stats.PrimaryStats.Strength.AddModifier(new StatModifier(100, StatModifierType.Flat, "battle"));
 
             var store = new GameSaveStore(Path.Combine(directory, "save.json"));
+            data.GetExploration("road").DiscoverNode("start");
+            data.GetExploration("road").ReachEnding("village");
             store.Save(data);
             GameData loaded = store.Load(formula);
+            Check(loaded.GetExploration("road").KnowsNode("start") && loaded.GetExploration("road").ReachedEndings.Count == 1, "exploration survives JSON and file round trip");
             Check(loaded.FamilyName == data.FamilyName && loaded.Protagonist.Name == "레온", "saved creation names");
             Check(loaded.Protagonist.Id == data.Protagonist.Id && loaded.Companions[0].Id == data.Companions[0].Id,
                 "stable character identities after load");
@@ -116,11 +120,11 @@ static class Program
             Throws<InvalidOperationException>(() => duplicate.Restore(formula));
 
             UnityEngine.Application.persistentDataPath = Path.Combine(directory, "session");
-            GameSession.StartExpedition(new ExpeditionRunData("forest", "숲", "GameScene"));
+            GameSession.StartExpedition(new ExpeditionRun("forest", "숲", "GameScene"));
             GameSession.StartNewGame(data);
             Check(GameSession.CurrentExpedition == null, "new game clears expedition context");
             Check(GameSession.Current == data && File.Exists(GameSession.SavePath), "new game commits disk and session");
-            GameSession.StartExpedition(new ExpeditionRunData("forest", "숲", "GameScene"));
+            GameSession.StartExpedition(new ExpeditionRun("forest", "숲", "GameScene"));
             Check(GameSession.TryLoad(formula) && GameSession.Current.Protagonist.Id == data.Protagonist.Id, "reload saved session");
             Check(GameSession.CurrentExpedition == null, "load clears transient expedition context");
             GameData previous = GameSession.Current;

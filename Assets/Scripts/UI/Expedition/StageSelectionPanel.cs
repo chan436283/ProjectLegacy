@@ -18,8 +18,8 @@ public sealed class StageSelectionPanel : CBehaviour
 
     public bool IsOpen { get; private set; }
     public event Action Closed;
-    public event Action<ExpeditionStage> DepartureRequested;
-    public ExpeditionStage SelectedStage => selectedPoint?.Stage;
+    public event Action<StageDefinition> DepartureRequested;
+    public StageDefinition SelectedStage => selectedPoint?.Stage;
 
     private MapPoint selectedPoint;
     private string familyName;

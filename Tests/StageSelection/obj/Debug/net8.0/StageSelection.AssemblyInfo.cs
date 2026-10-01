@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("StageSelection")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+36779454b4f623ee6a8a54b888dad62cce3b25bc")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+226a2527d78d53fedc9fe79ebcb2a8e002068cfd")]
 [assembly: System.Reflection.AssemblyProductAttribute("StageSelection")]
 [assembly: System.Reflection.AssemblyTitleAttribute("StageSelection")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

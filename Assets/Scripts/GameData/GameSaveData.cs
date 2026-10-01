@@ -9,6 +9,17 @@ public sealed class GameSaveData
     public string familyName;
     public CharacterRecord protagonist;
     public List<CharacterRecord> companions;
+    public List<ExplorationRecord> explorations;
+
+    [Serializable]
+    public sealed class ExplorationRecord
+    {
+        public string stageId;
+        public List<string> nodes;
+        public List<string> routes;
+        public List<string> endings;
+    }
+
 
     [Serializable]
     public sealed class CharacterRecord
@@ -51,18 +62,35 @@ public sealed class GameSaveData
         if (data == null) throw new ArgumentNullException(nameof(data));
         var save = new GameSaveData
         {
-            version = 1, familyName = data.FamilyName,
+            version = 2, familyName = data.FamilyName,
             protagonist = CharacterRecord.Capture(data.Protagonist),
-            companions = new List<CharacterRecord>()
+            companions = new List<CharacterRecord>(),
+            explorations = new List<ExplorationRecord>()
         };
         foreach (CharacterData companion in data.Companions)
             save.companions.Add(CharacterRecord.Capture(companion));
+        foreach (var record in data.Explorations)
+            save.explorations.Add(new ExplorationRecord { stageId = record.StageId,
+                nodes = new List<string>(record.DiscoveredNodes), routes = new List<string>(record.DiscoveredRoutes),
+                endings = new List<string>(record.ReachedEndings) });
         return save;
+    }
+
+    private static void RestoreIds(List<string> values, Action<string> add)
+    {
+        var seen = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var id in values)
+        {
+            if (string.IsNullOrWhiteSpace(id) || id != id.Trim() || !seen.Add(id))
+                throw new ArgumentException("발견 기록의 ID가 올바르지 않습니다.");
+            add(id);
+        }
     }
 
     public GameData Restore(BattleStatFormulaConfig formula)
     {
-        if (version != 1 || protagonist == null || companions == null)
+        if ((version != 1 && version != 2) || protagonist == null || companions == null ||
+            (version == 2 && explorations == null))
             throw new ArgumentException("지원하지 않거나 손상된 저장 데이터입니다.");
         var restoredCompanions = new List<CharacterData>();
         foreach (CharacterRecord companion in companions)
@@ -70,6 +98,21 @@ public sealed class GameSaveData
             if (companion == null) throw new ArgumentException("동료 저장 데이터가 없습니다.");
             restoredCompanions.Add(companion.Restore(formula));
         }
-        return GameData.Restore(familyName, protagonist.Restore(formula), restoredCompanions);
+        var data = GameData.Restore(familyName, protagonist.Restore(formula), restoredCompanions);
+        if (version == 2)
+        {
+            var ids = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var record in explorations)
+            {
+                if (record == null || string.IsNullOrWhiteSpace(record.stageId) || !ids.Add(record.stageId) ||
+                    record.nodes == null || record.routes == null || record.endings == null)
+                    throw new ArgumentException("탐험 기록이 올바르지 않습니다.");
+                var target = data.GetExploration(record.stageId);
+                RestoreIds(record.nodes, target.DiscoverNode);
+                RestoreIds(record.routes, target.DiscoverRoute);
+                RestoreIds(record.endings, target.ReachEnding);
+            }
+        }
+        return data;
     }
 }

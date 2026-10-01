@@ -15,7 +15,25 @@ static class Program
     }
     static void Main()
     {
-        var template = new ExpeditionStage { stageId = "road", displayName = "{FamilyName} 남서 가도" };
+        Check(GameTextFormatter.Format(null, "Name", "A") == null, "null template preserved");
+        Check(GameTextFormatter.Format("고정 이름", "Name", null) == "고정 이름", "plain text unchanged");
+        Check(GameTextFormatter.Format("{Name}/{Name}", "Name", " A ") == " A / A ", "repeated tokens and value whitespace preserved");
+        Check(GameTextFormatter.Format("{Name}", "Name", null) == "", "null value becomes empty");
+        Check(GameTextFormatter.Format("<b>{Name}</b> {Unknown} {0}", "Name", "A") == "<b>A</b> {Unknown} {0}",
+            "rich text and unrelated placeholders preserved");
+        Check(GameTextFormatter.Format("{Name}", "Name", "{Name}") == "{Name}", "single token replacement is not recursive");
+        var tokens = new System.Collections.Generic.Dictionary<string, string>
+        {
+            { "CharacterName", "{StageName}" }, { "StageName", "남서 가도" }, { "Empty", null }
+        };
+        Check(GameTextFormatter.Format("{CharacterName}: {StageName}/{StageName} {Unknown}{Empty}", tokens)
+            == "{StageName}: 남서 가도/남서 가도 {Unknown}", "multiple tokens replaced without recursive substitution");
+        Check(GameTextFormatter.Format(null, tokens) == null, "multi token null template preserved");
+        bool invalidTokenRejected = false;
+        try { GameTextFormatter.Format("text", "{Name}", "A"); }
+        catch (ArgumentException) { invalidTokenRejected = true; }
+        Check(invalidTokenRejected, "token names must exclude braces");
+        var template = new StageDefinition { stageId = "road", displayName = "{FamilyName} 남서 가도" };
         Check(template.GetDisplayName(" 아르덴 ") == "아르덴 남서 가도", "resolve family token");
         Check(template.CreateRun("아르덴").StageName == "아르덴 남서 가도", "run stores resolved stage name");
         Check(template.GetDisplayName(null) == "이름 없는 가문 남서 가도", "missing family fallback");
@@ -35,7 +53,7 @@ static class Program
         for (int i = 0; i < 2; i++)
         {
             var point = new MapPoint();
-            Set(point, "stage", new ExpeditionStage { stageId = "stage" + i, displayName = "{FamilyName} 지점" + i });
+            Set(point, "stage", new StageDefinition { stageId = "stage" + i, displayName = "{FamilyName} 지점" + i });
             Set(point, "button", buttons[i]);
             Set(point, "available", i == 0);
             Set(point, "pulseTarget", pulseTargets[i]);
@@ -44,7 +62,7 @@ static class Program
         }
         Set(panel, "points", points);
         int departures = 0;
-        ExpeditionStage requested = null;
+        StageDefinition requested = null;
         panel.DepartureRequested += stage => { departures++; requested = stage; };
         Check(panel.Open("아르덴") && !depart.interactable && title.text == "원정 지점을 선택해주세요.", "open without selection");
         Check(pulseTargets[0].lastTween.active && pulseTargets[1].lastTween == null && !buttons[1].interactable,

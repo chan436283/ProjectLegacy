@@ -10,6 +10,16 @@ public sealed class GameData
     [SerializeField] private CharacterData protagonist;
     [SerializeField] private List<CharacterData> companions = new();
 
+    private readonly Dictionary<string, StageExplorationData> explorations = new(StringComparer.Ordinal);
+    public IReadOnlyCollection<StageExplorationData> Explorations => new List<StageExplorationData>(explorations.Values).AsReadOnly();
+    public StageExplorationData GetExploration(string stageId)
+    {
+        if (string.IsNullOrWhiteSpace(stageId)) throw new ArgumentException("스테이지 ID가 필요합니다.");
+        if (!explorations.TryGetValue(stageId, out var record))
+            explorations.Add(stageId, record = new StageExplorationData(stageId));
+        return record;
+    }
+
     public string FamilyName => familyName;
     public CharacterData Protagonist => protagonist;
 

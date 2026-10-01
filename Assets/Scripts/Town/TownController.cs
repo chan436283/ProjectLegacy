@@ -116,7 +116,7 @@ public sealed class TownController : CBehaviour
         if (familyMembersButton != null) familyMembersButton.interactable = enabled;
     }
 
-    private void StartStage(ExpeditionStage stage)
+    private void StartStage(StageDefinition stage)
     {
         if (!isReady || !isActiveAndEnabled || isTransitioning ||
             stageSelectionPanel == null || !stageSelectionPanel.IsOpen) return;
@@ -171,5 +171,4 @@ public sealed class TownController : CBehaviour
             familyMembersButton.Select();
         }
     }
-
 }

@@ -6,11 +6,13 @@ using UnityEngine;
 public static class GameSession
 {
     public static GameData Current { get; private set; }
-    public static ExpeditionRunData CurrentExpedition { get; private set; }
+    public static ExpeditionRun CurrentExpedition { get; private set; }
 
-    public static void StartExpedition(ExpeditionRunData run)
+    public static void StartExpedition(ExpeditionRun run)
     {
-        CurrentExpedition = run ?? throw new ArgumentNullException(nameof(run));
+        if (run == null) throw new ArgumentNullException(nameof(run));
+        if (Current != null) run.AttachExploration(Current.GetExploration(run.StageId));
+        CurrentExpedition = run;
     }
 
     public static void EndExpedition() => CurrentExpedition = null;
