@@ -19,6 +19,11 @@ public sealed class BattleUnit : CBehaviour
     [SerializeField]
     private BattleUnitView view;
 
+    [Header("Formation")]
+    [SerializeField] private BattleRow row = BattleRow.Front;
+    [Tooltip("열 안의 자리 번호입니다. 화면 위에서 아래 순서로 1부터 시작합니다.")]
+    [SerializeField, Min(1)] private int formationPosition = 1;
+
     [Header("Battle Actions")]
     [SerializeField]
     private BattleSkill basicAttackSkill;
@@ -67,6 +72,8 @@ public sealed class BattleUnit : CBehaviour
     public bool HasStatus(string statusId) => statuses.Exists(status => status.StatusId == statusId);
 
     public BattleSide Side => side;
+    public BattleRow Row => row;
+    public int FormationPosition => formationPosition;
     public BattleControlType ControlType => controlType;
     public CharacterStats Stats => statsComponent.Stats;
     public BattleUnitView View => view;
@@ -90,6 +97,17 @@ public sealed class BattleUnit : CBehaviour
     public void SetControlType(BattleControlType value)
     {
         controlType = value;
+    }
+
+    /// <summary>논리적인 자리를 설정합니다. 화면 배치는 BattleFormation에서 수행합니다.</summary>
+    public void SetFormationPosition(BattleRow value, int position)
+    {
+        if (!Enum.IsDefined(typeof(BattleRow), value))
+            throw new ArgumentOutOfRangeException(nameof(value));
+        if (position < 1)
+            throw new ArgumentOutOfRangeException(nameof(position));
+        row = value;
+        formationPosition = position;
     }
 
     public bool HasSkill(BattleSkill skill)

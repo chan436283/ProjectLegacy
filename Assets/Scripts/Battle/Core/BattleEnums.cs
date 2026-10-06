@@ -4,6 +4,12 @@ public enum BattleSide
     Enemy
 }
 
+public enum BattleRow
+{
+    Front = 0,
+    Back = 1
+}
+
 public enum BattleControlType
 {
     Player,

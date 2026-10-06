@@ -27,6 +27,26 @@ public sealed class ExpeditionRun
         internal RouteOption(StageRoute route)
         { RouteId = route.routeId; TargetNodeId = route.targetNodeId; Label = route.label; }
     }
+
+    /// <summary>지도 UI용 읽기 전용 정보. 공개 여부는 Exploration으로 판단합니다.</summary>
+    public sealed class MapNodeInfo
+    {
+        public string NodeId { get; }
+        public string DisplayName { get; }
+        public IReadOnlyList<RouteOption> Routes { get; }
+
+        internal MapNodeInfo(string nodeId, string displayName, IReadOnlyList<RouteOption> routes)
+        { NodeId = nodeId; DisplayName = displayName; Routes = routes; }
+    }
+
+    /// <summary>출발 시 확정한 경로를 반환합니다. 이후 스테이지 에셋 편집의 영향을 받지 않습니다.</summary>
+    public IReadOnlyList<MapNodeInfo> GetMapNodes()
+    {
+        var result = new List<MapNodeInfo>(graph.Count);
+        foreach (var node in graph.Values)
+            result.Add(new MapNodeInfo(node.id, node.name, node.routes.AsReadOnly()));
+        return result.AsReadOnly();
+    }
     private sealed class NodeSnapshot
     {
         public string id, name, endingId;

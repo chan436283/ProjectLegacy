@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 3b4e5d51bd4494b0cb2eb07ab958446f
+guid: a389751705ed74d12966f04298ccc6d0
 TextureImporter:
   internalIDToNameTable: []
   externalObjects: {}
@@ -72,7 +72,7 @@ TextureImporter:
     maxTextureSize: 2048
     resizeAlgorithm: 0
     textureFormat: -1
-    textureCompression: 0
+    textureCompression: 1
     compressionQuality: 50
     crunchedCompression: 0
     allowsAlphaSplitting: 0
@@ -123,7 +123,7 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: goblin_idle_pixel_v3_4x2_256_0
+      name: goblin_archer_death_4x2_256_0
       rect:
         serializedVersion: 2
         x: 0
@@ -138,14 +138,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 471de5775b2514090b4728bcfefed800
-      internalID: -797629658
+      spriteID: 4307996e3a39c4cffab26e8a66b3a823
+      internalID: 1668607618
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: goblin_idle_pixel_v3_4x2_256_1
+      name: goblin_archer_death_4x2_256_1
       rect:
         serializedVersion: 2
         x: 256
@@ -160,14 +160,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 5178bdc00c5a64fd89aab1b41f0bff42
-      internalID: 1328835632
+      spriteID: 5c9cad4c949074f668271d2ebb040749
+      internalID: 2130934893
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: goblin_idle_pixel_v3_4x2_256_2
+      name: goblin_archer_death_4x2_256_2
       rect:
         serializedVersion: 2
         x: 512
@@ -182,14 +182,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: a73fb1da26f134881b08fb25bc060aab
-      internalID: -606017434
+      spriteID: 40dfb661fbfcf49129af15628acf1710
+      internalID: 1255807313
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: goblin_idle_pixel_v3_4x2_256_3
+      name: goblin_archer_death_4x2_256_3
       rect:
         serializedVersion: 2
         x: 768
@@ -204,14 +204,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: f7678bdb4037d400088aebf0f8a5171a
-      internalID: -1043644160
+      spriteID: aeadd579c91d74427913618368cd3d95
+      internalID: 1366413883
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: goblin_idle_pixel_v3_4x2_256_4
+      name: goblin_archer_death_4x2_256_4
       rect:
         serializedVersion: 2
         x: 0
@@ -226,14 +226,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 08ac82e5ab1b948559838fe7c34dc855
-      internalID: 694892935
+      spriteID: 0c44d6c7da3dc4a33a66652c37b03569
+      internalID: 803612625
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: goblin_idle_pixel_v3_4x2_256_5
+      name: goblin_archer_death_4x2_256_5
       rect:
         serializedVersion: 2
         x: 256
@@ -248,14 +248,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: f951908158165482facb249889d1a0a5
-      internalID: 1034392549
+      spriteID: e80423923dc1444c5ba9153dd3ba8e91
+      internalID: 2133172665
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: goblin_idle_pixel_v3_4x2_256_6
+      name: goblin_archer_death_4x2_256_6
       rect:
         serializedVersion: 2
         x: 512
@@ -270,14 +270,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 5fbe660c78067473c8216cf2ab1b7be7
-      internalID: -750001296
+      spriteID: 0b3f8d3240db04e0b9b4f93be670e10c
+      internalID: 454992157
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: goblin_idle_pixel_v3_4x2_256_7
+      name: goblin_archer_death_4x2_256_7
       rect:
         serializedVersion: 2
         x: 768
@@ -292,8 +292,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: a7b1c2751d023400790f6fa061f40ef6
-      internalID: 845349958
+      spriteID: 60c31b30b6e5d4eda968827f427aa59d
+      internalID: -1665623013
       vertices: []
       indices: 
       edges: []
@@ -302,7 +302,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: dc609ca16be3b47358b7f2831fe9f852
+    spriteID: 9ee29b60f593c4a5eba121075a423bc8
     internalID: 0
     vertices: []
     indices: 
@@ -314,14 +314,14 @@ TextureImporter:
       - key: SpriteEditor.SliceSettings
         value: '{"sliceOnImport":false,"gridCellCount":{"x":4.0,"y":2.0},"gridSpriteSize":{"x":256.0,"y":256.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.5,"y":0.5},"pivotPixels":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":0,"pivotUnitMode":0,"slicingType":2,"keepEmptyRects":false,"isAlternate":false}'
     nameFileIdTable:
-      goblin_idle_pixel_v3_4x2_256_0: -797629658
-      goblin_idle_pixel_v3_4x2_256_1: 1328835632
-      goblin_idle_pixel_v3_4x2_256_2: -606017434
-      goblin_idle_pixel_v3_4x2_256_3: -1043644160
-      goblin_idle_pixel_v3_4x2_256_4: 694892935
-      goblin_idle_pixel_v3_4x2_256_5: 1034392549
-      goblin_idle_pixel_v3_4x2_256_6: -750001296
-      goblin_idle_pixel_v3_4x2_256_7: 845349958
+      goblin_archer_death_4x2_256_0: 1668607618
+      goblin_archer_death_4x2_256_1: 2130934893
+      goblin_archer_death_4x2_256_2: 1255807313
+      goblin_archer_death_4x2_256_3: 1366413883
+      goblin_archer_death_4x2_256_4: 803612625
+      goblin_archer_death_4x2_256_5: 2133172665
+      goblin_archer_death_4x2_256_6: 454992157
+      goblin_archer_death_4x2_256_7: -1665623013
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

@@ -11,7 +11,7 @@ static class ExpeditionTests
     public static void Run()
     {
         var content = new BattleContent { contentId = "ambush", enemyGroups = new[] {
-            new EnemyGroupEntry { group = new EnemyGroup { groupId = "ambush", enemies = new[] { new BattleUnit() } } } } };
+            new EnemyGroupEntry { group = new EnemyGroup { groupId = "ambush", placements = new[] { new EnemyPlacement { prefab = new BattleUnit() } } } } } };
         var stage = new StageDefinition { stageId = "road", displayName = "{FamilyName} 가도", nodes = new[] {
             Node("start", StageNodeType.Start, Route("left", "fight"), Route("right", "fork")),
             Node("fight", StageNodeType.Normal, Route("merge", "fork")),

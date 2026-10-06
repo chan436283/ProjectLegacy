@@ -181,13 +181,13 @@ Unity Play Mode와 콘텐츠 실행은 별도로 확인해야 한다.
 
 ## 전투 콘텐츠와 적 그룹
 
-- `EnemyGroup` SO: groupId와 enemies. 한 항목이 적 한 개체이며 같은 프리팹을 반복 지정할 수 있다.
+- `EnemyGroup` SO: groupId와 placements. 한 항목이 적 한 개체이며 prefab, row(Front/Back), position(1부터)을 지정한다. 같은 프리팹을 서로 다른 자리에 반복 지정할 수 있다.
 - `BattleContent` SO: enemyGroups 엔트리 목록(그룹 참조 + weight), backgroundPrefab(선택), allowEscape.
-- `BattleEncounter`: 이번 전투에서 선택된 그룹 ID, 적 프리팹 목록, 배경, 도주 설정의 스냅샷.
+- `BattleEncounter`: 이번 전투에서 선택된 그룹 ID, Enemies(프리팹·열·자리 번호), 배경, 도주 설정의 스냅샷.
 
 Create > ProjectLegacy > Battle > Enemy Group으로 그룹을 만든다.
 적은 BattleUnit이 설정된 프리팹을 참조하며 Side=Enemy, ControlType=AI여야 한다.
-프리팹에서 스탯·스킬·AI를 설정한다. enemies 배열 순서가 기존 BattleFormation의 적 슬롯 순서다.
+프리팹에서 스탯·스킬·AI를 설정한다. 그룹의 placements에서 개체별 자리를 지정하며 배열 순서는 배치에 영향을 주지 않는다.
 같은 그룹을 여러 전투 콘텐츠에서 재사용할 수 있다. 후보 그룹은 ID가 고유해야 하며
 각 엔트리의 weight로 등장 비율을 설정한다. 확률은 weight / 전체 weight 합이다.
 예를 들어 6:3:1은 60%:30%:10%다. 가중치는 전투 콘텐츠마다 독립적으로 설정한다.
@@ -200,19 +200,53 @@ EnemyGroupEntry는 별도 SO가 아닌 BattleContent 내부 직렬화 항목이�
 ```csharp
 var content = (BattleContent)run.CurrentContent;
 var encounter = content.CreateEncounter(random); // System.Random. 전투 시작 시 한 번 호출해 보관
-// 다음 단계의 전투 실행기가 EnemyPrefabs를 각각 Instantiate하고 참가자로 등록한다.
-// 같은 프리팹이 두 번 있으면 서로 다른 개체 두 개를 생성해야 한다.
+// 아군을 미리 등록하고 BattleController의 Start Automatically를 꺼둔다.
+// 기존 적 참가자는 없어야 하며, 활성 BattleFormation에 필요한 슬롯을 연결한다.
+battleController.StartBattle(encounter); // 적 생성 → 열/자리 전달 → 배치 → 전투 시작
 // BackgroundPrefab을 배치하고 AllowEscape를 도주 처리에 적용한다.
 // 전투 승리 시에만 run.CompleteCurrentNode(enteredNodeId)를 호출한다.
 ```
 
 설정을 읽을 때마다 CreateEncounter를 다시 호출하면 재추첨되므로 보관한 결과를 사용한다.
-적 목록은 복사하지만 프리팹 에셋 자체는 공유 참조다. 에셋을 전투 참가자로 직접 사용하거나
+적 프리팹 참조·열·자리 번호는 읽기 전용 값으로 복사하지만 프리팹 에셋 자체는 공유 참조다. 에셋을 전투 참가자로 직접 사용하거나
 HP·상태 이상을 에셋에 기록하지 않는다. 콘텐츠와 그룹 검증은 출정 및 편성 생성 시 수행한다.
-실제 적 생성, 전투 시작 연결, 배경 배치, 도주 실행, 보상 지급은 아직 구현하지 않았다.
+StartBattle(encounter)는 적을 생성하고 초기 자리를 설정한 뒤 전투를 시작한다. 배치 검증 실패 시 생성한 적을 정리하며 기존 참가자는 이동하지 않는다.
+원정 콘텐츠 실행기에서 이 API를 호출하는 흐름, 배경 배치, 도주 실행, 보상 지급은 아직 구현하지 않았다.
 보상 시스템과 별도의 일반전/보스전/이벤트전 enum은 이번 구조에 추가하지 않았다.
 
 ExampleAmbush는 BattleContent, ExampleTraveler는 EventContent로 마이그레이션했다.
 기존 에셋 GUID는 유지했다. ExampleAmbush는 적 프리팹/EnemyGroup을 연결해야 검증을 통과한다.
 테스트는 그룹 선택·단일 그룹 고정·동일 시드 재현·초기 설정 복사·잘못된 편성 거절을 검증한다.
 Unity 프리팹 생성과 실제 전투 수명 주기는 별도 Play Mode 검증 대상이다.
+
+
+## 적 전열·후열 자리 연결
+
+1. `BattleFormation`의 Enemy Front Slots / Enemy Back Slots에 각 열의 위치 Transform을 연결한다.
+   각 목록은 화면 위에서 아래 순서이며 Element 0이 1번 자리, Element 1이 2번 자리다.
+   열마다 목록 길이가 해당 열의 자리 수다. 사용하려는 자리에 Transform이 없으면 오류로 처리한다.
+2. `EnemyGroup`의 Placements에 Prefab, Row, Position을 설정한다.
+   예: 고블린 Front 1, 고블린 Front 3, 궁수 Back 2. Front 2와 Back 1은 빈자리로 유지된다.
+   같은 열·자리 중복, 0 이하 번호, 잘못된 열, 누락/잘못된 프리팹은 그룹 검증에서 거절한다.
+   씬의 슬롯 범위·Transform 누락/중복은 BattleFormation이 실제 배치 전에 검증한다.
+3. 현재처럼 씬에 적을 직접 놓고 실행할 때는 각 적 인스턴스의 `BattleUnit`에서
+   Row와 Formation Position을 지정하고 기존 Participants에 등록한다.
+   이 경로에서는 프리팹의 기본 자리(Front 1)가 겹치지 않도록 인스턴스마다 설정해야 한다.
+4. 그룹에서 생성하는 경로는 `StartBattle(encounter)`를 호출한다. 그룹의 자리가 프리팹의 기본 자리를 덮어쓴다.
+   논리적인 자리는 `BattleUnit.Row`, `FormationPosition`으로 조회한다.
+   `SetFormationPosition`은 논리 값만 변경하며 실제 화면 배치는 `BattleFormation.PlaceParticipants`가 수행한다.
+
+아군은 기존 Ally Slots의 참가자 순서 배치를 유지한다. 아군 파티 편집은 아직 연결하지 않는다.
+전열이 비거나 사망해도 후열을 앞으로 당기지 않으며, 캐릭터 직업·스킬에 따른 배치 제한도 없다.
+이동/공격 애니메이션의 좌표는 논리적인 열·자리 번호를 바꾸지 않는다.
+후열 공격 제한이나 열에 따른 능력치 보정은 이번 배치 기능에 포함하지 않는다.
+
+이전 EnemyGroup의 enemies 배열은 역직렬화 시 Front 1, Front 2…로 옮겨 기존 프리팹 참조를 보존한다.
+기존 BattleFormation의 Enemy Slots 참조는 Enemy Front Slots로 유지된다.
+기존 슬롯의 시각적 위치가 전열·후열로 섞여 있었다면 Unity에서 두 목록을 의도대로 다시 연결해야 한다.
+씬·프리팹·SO 에셋 자체는 이번 코드 변경으로 수정하지 않았다.
+
+검증: `dotnet run --project Tests/Formation/Formation.csproj`는 실제 배치·유닛·전투 시작 코드를
+Unity 대역으로 실행해 고정 자리, 빈자리, 중복/누락 거절, 실패 시 정리와 재시도를 확인한다.
+`Tests/Progress`는 편성 스냅샷 및 이전 목록 변환을 포함한다.
+실제 Unity 역직렬화, Instantiate 수명 주기와 화면 배치는 Play Mode에서 별도로 확인한다.

@@ -9,3 +9,20 @@ namespace UnityEngine
     public class GameObject { }
     public sealed class MinAttribute : System.Attribute { public MinAttribute(float min) { } }
 }
+
+namespace UnityEngine
+{
+    public sealed class HideInInspector : System.Attribute { }
+    public interface ISerializationCallbackReceiver
+    {
+        void OnBeforeSerialize();
+        void OnAfterDeserialize();
+    }
+}
+namespace UnityEngine.Serialization
+{
+    public sealed class FormerlySerializedAsAttribute : System.Attribute
+    {
+        public FormerlySerializedAsAttribute(string oldName) { }
+    }
+}

@@ -4,3 +4,13 @@ public sealed class BattleUnit
     public BattleSide Side { get; set; } = BattleSide.Enemy;
     public BattleControlType ControlType { get; set; } = BattleControlType.AI;
 }
+
+namespace UnityEngine
+{
+    public sealed class HideInInspector : System.Attribute { }
+    public interface ISerializationCallbackReceiver
+    {
+        void OnBeforeSerialize();
+        void OnAfterDeserialize();
+    }
+}

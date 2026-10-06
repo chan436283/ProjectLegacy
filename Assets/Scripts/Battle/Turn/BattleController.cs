@@ -58,6 +58,52 @@ public sealed class BattleController : CBehaviour
             StartBattle();
     }
 
+    /// <summary>확정된 편성으로 적을 생성하고 전투를 시작합니다. 아군은 미리 등록해야 합니다.</summary>
+    public void StartBattle(BattleEncounter encounter, Transform enemyParent = null)
+    {
+        if (encounter == null) throw new ArgumentNullException(nameof(encounter));
+        if (State != BattleState.Idle)
+            throw new InvalidOperationException("이미 전투가 진행 중입니다.");
+        if (participants.Any(unit => unit != null && unit.Side == BattleSide.Enemy))
+            throw new InvalidOperationException("편성에서 적을 생성하려면 기존 적 참가자를 먼저 제거해야 합니다.");
+        if (formation == null) formation = GetComponent<BattleFormation>();
+        if (formation == null || !formation.isActiveAndEnabled)
+            throw new InvalidOperationException("적 편성을 배치할 활성 BattleFormation이 필요합니다.");
+
+        var spawned = new List<BattleUnit>();
+        try
+        {
+            foreach (EnemySpawnData entry in encounter.Enemies)
+            {
+                BattleUnit unit = Instantiate(entry.Prefab, enemyParent);
+                spawned.Add(unit);
+                unit.SetFormationPosition(entry.Row, entry.Position);
+            }
+
+            var combined = new List<BattleUnit>(participants);
+            combined.AddRange(spawned);
+            // 잘못된 슬롯 설정으로 기존 아군만 이동하거나 일부 적만 등록되지 않게 합니다.
+            formation.ValidateParticipants(combined);
+            participants.AddRange(spawned);
+            StartBattle();
+        }
+        catch
+        {
+            // 전투 시작 이후 이벤트에서 발생한 예외는 이미 진행 중인 전투를 되돌리지 않습니다.
+            if (State == BattleState.Idle)
+            {
+                foreach (BattleUnit unit in spawned)
+                {
+                    participants.Remove(unit);
+                    if (unit == null) continue;
+                    unit.gameObject.SetActive(false);
+                    Destroy(unit.gameObject);
+                }
+            }
+            throw;
+        }
+    }
+
     public void StartBattle()
     {
         if (State != BattleState.Idle)

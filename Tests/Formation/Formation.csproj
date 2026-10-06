@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <NuGetAudit>false</NuGetAudit>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../../Assets/Scripts/Battle/Core/BattleEnums.cs" />
+    <Compile Include="../../Assets/Scripts/Battle/Core/BattleUnit.cs" />
+    <Compile Include="../../Assets/Scripts/Battle/Core/BattleStatus.cs" />
+    <Compile Include="../../Assets/Scripts/Battle/Core/BattleDamageInfo.cs" />
+    <Compile Include="../../Assets/Scripts/Battle/Turn/*.cs" />
+    <Compile Include="../../Assets/Scripts/Stage/StageContent.cs" />
+    <Compile Include="../../Assets/Scripts/Stage/EnemyGroup.cs" />
+    <Compile Include="../../Assets/Scripts/Stage/BattleContent.cs" />
+    <Compile Include="../../Assets/Scripts/Stage/BattleEncounter.cs" />
+  </ItemGroup>
+</Project>
