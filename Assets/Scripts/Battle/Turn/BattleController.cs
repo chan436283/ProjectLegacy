@@ -35,6 +35,9 @@ public sealed class BattleController : CBehaviour
     private List<BattleUnitStatusView> allyStatusViews = new();
 
     private readonly ActionValueTimeline timeline = new();
+    private readonly List<BattleUnit> spawnedEnemies = new();
+
+    public void SetStartAutomatically(bool value) => startAutomatically = value;
 
     public event Action BattleStarted;
     public event Action<int, float> RoundStarted;
@@ -54,7 +57,7 @@ public sealed class BattleController : CBehaviour
 
     protected override void OnStarted()
     {
-        if (startAutomatically)
+        if (startAutomatically && State == BattleState.Idle)
             StartBattle();
     }
 
@@ -85,6 +88,7 @@ public sealed class BattleController : CBehaviour
             // 잘못된 슬롯 설정으로 기존 아군만 이동하거나 일부 적만 등록되지 않게 합니다.
             formation.ValidateParticipants(combined);
             participants.AddRange(spawned);
+            spawnedEnemies.AddRange(spawned);
             StartBattle();
         }
         catch
@@ -95,6 +99,7 @@ public sealed class BattleController : CBehaviour
                 foreach (BattleUnit unit in spawned)
                 {
                     participants.Remove(unit);
+                    spawnedEnemies.Remove(unit);
                     if (unit == null) continue;
                     unit.gameObject.SetActive(false);
                     Destroy(unit.gameObject);
@@ -102,6 +107,30 @@ public sealed class BattleController : CBehaviour
             }
             throw;
         }
+    }
+
+    /// <summary>종료된 전투를 정리합니다. 생성한 적만 제거하고 아군 HP/MP는 유지합니다.
+    /// BattleEnded 콜백 안이 아닌, 이벤트 전달이 끝난 뒤 호출하세요.</summary>
+    public void ResetBattle()
+    {
+        if (State != BattleState.Idle && State != BattleState.Victory && State != BattleState.Defeat)
+            throw new InvalidOperationException("진행 중인 전투는 초기화할 수 없습니다.");
+        foreach (var unit in participants)
+            if (unit != null) unit.ClearBattleStatuses();
+        foreach (var unit in spawnedEnemies)
+        {
+            participants.Remove(unit);
+            if (unit == null) continue;
+            unit.gameObject.SetActive(false);
+            Destroy(unit.gameObject);
+        }
+        spawnedEnemies.Clear();
+        timeline.Initialize(Array.Empty<BattleUnit>(), actionValueConstant);
+        CurrentUnit = null;
+        RoundNumber = 0;
+        RemainingRoundActionValue = ElapsedActionValue = 0f;
+        State = BattleState.Idle;
+        RefreshAllyStatusViews();
     }
 
     public void StartBattle()

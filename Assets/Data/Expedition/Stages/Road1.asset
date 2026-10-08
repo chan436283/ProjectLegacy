@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d4ccf519dca14d00acbf28f5cac145e4, type: 3}
   m_Name: Road1
   m_EditorClassIdentifier: Assembly-CSharp::StageDefinition
-  stageId: road_01
+  stageId: road1
   displayName: "{FamilyName} \uB0A8\uC11C \uAC00\uB3C4"
   entryScene: GameScene
+  mapPrefab: {fileID: 0}

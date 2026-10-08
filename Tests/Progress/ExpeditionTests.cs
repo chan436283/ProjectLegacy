@@ -12,11 +12,11 @@ static class ExpeditionTests
     {
         var content = new BattleContent { contentId = "ambush", enemyGroups = new[] {
             new EnemyGroupEntry { group = new EnemyGroup { groupId = "ambush", placements = new[] { new EnemyPlacement { prefab = new BattleUnit() } } } } } };
-        var stage = new StageDefinition { stageId = "road", displayName = "{FamilyName} 가도", nodes = new[] {
-            Node("start", StageNodeType.Start, Route("left", "fight"), Route("right", "fork")),
-            Node("fight", StageNodeType.Normal, Route("merge", "fork")),
-            Node("fork", StageNodeType.Normal, Route("a", "end_a"), Route("b", "end_b")),
-            Node("end_a", StageNodeType.Ending), Node("end_b", StageNodeType.Ending)
+        var stage = new GraphFixture { stageId = "road", displayName = "{FamilyName} 가도", nodes = new[] {
+            Node("start", ExpeditionPointKind.Start, Route("left", "fight"), Route("right", "fork")),
+            Node("fight", ExpeditionPointKind.Normal, Route("merge", "fork")),
+            Node("fork", ExpeditionPointKind.Normal, Route("a", "end_a"), Route("b", "end_b")),
+            Node("end_a", ExpeditionPointKind.Ending), Node("end_b", ExpeditionPointKind.Ending)
         }};
         stage.nodes[1].content = content;
         stage.nodes[2].content = new EventContent { contentId = "crossroads" };
@@ -58,10 +58,10 @@ static class ExpeditionTests
         stage.nodes[0].routes[0].targetNodeId = "start"; Reject(stage.Validate);
         stage.nodes[0].routes[0].targetNodeId = "fork"; Reject(stage.Validate); // 중복 대상/미도달
         stage.nodes[0].routes[0].targetNodeId = "fight";
-        stage.nodes[1].content = null; Reject(stage.Validate); stage.nodes[1].content = content;
+        stage.nodes[1].content = null; stage.Validate(); stage.nodes[1].content = content;
         stage.nodes[1].routes[0].routeId = "left"; Reject(stage.Validate); stage.nodes[1].routes[0].routeId = "merge";
         stage.nodes[3].routes = new[] { Route("cycle", "start") }; Reject(stage.Validate);
-        stage.nodes[3].routes = Array.Empty<StageRoute>();
+        stage.nodes[3].routes = Array.Empty<ConnectionFixture>();
         stage.nodes[4].endingId = "a"; Reject(stage.Validate); stage.nodes[4].endingId = "b";
         stage.Validate();
         // 시작 이벤트와 보스 종착점도 콘텐츠가 완료될 때까지 기다립니다.
@@ -69,12 +69,12 @@ static class ExpeditionTests
         stage.nodes[0].content = intro;
         stage.nodes[3].content = content;
         var bossRun = stage.CreateRun();
-        Check(bossRun.CurrentNodeKind == StageNodeType.Start && bossRun.CurrentContent == intro);
+        Check(bossRun.CurrentNodeKind == ExpeditionPointKind.Start && bossRun.CurrentContent == intro);
         Check(bossRun.Phase == ExpeditionRun.RunPhase.ResolvingNode && bossRun.CompletedNodes.Count == 0);
         Reject(() => bossRun.ChooseRoute("right"));
         bossRun.CompleteCurrentNode("start");
         bossRun.ChooseRoute("right"); bossRun.CompleteCurrentNode("fork"); bossRun.ChooseRoute("a");
-        Check(bossRun.CurrentNodeKind == StageNodeType.Ending && bossRun.CurrentContent.Type == StageContentType.Battle);
+        Check(bossRun.CurrentNodeKind == ExpeditionPointKind.Ending && bossRun.CurrentContent.Type == StageContentType.Battle);
         Check(bossRun.Phase == ExpeditionRun.RunPhase.ResolvingNode && bossRun.EndingId == null);
         Check(bossRun.Exploration.ReachedEndings.Count == 0 && bossRun.AvailableRoutes.Count == 0);
         Reject(() => bossRun.ChooseRoute("b"));
@@ -89,12 +89,35 @@ static class ExpeditionTests
         Check(eventRun.Phase == ExpeditionRun.RunPhase.ResolvingNode && eventRun.CurrentContent == intro);
         eventRun.CompleteCurrentNode("end_a"); Check(eventRun.Phase == ExpeditionRun.RunPhase.Completed);
         intro.contentId = " "; Reject(stage.Validate); intro.contentId = "intro";
-        stage.nodes[1].kind = (StageNodeType)99; Reject(stage.Validate); stage.nodes[1].kind = StageNodeType.Normal;
+        stage.nodes[1].kind = (ExpeditionPointKind)99; Reject(stage.Validate); stage.nodes[1].kind = ExpeditionPointKind.Normal;
         stage.Validate();
         BattleContentTests.Run();
         Console.WriteLine("PASS: authored graph validation, branching/merge/endings, completion guards, snapshot, exploration persistence and v1 migration");
     }
-    static StageNode Node(string id, StageNodeType kind, params StageRoute[] routes) =>
-        new StageNode { nodeId = id, displayName = id, kind = kind, routes = routes };
-    static StageRoute Route(string id, string target) => new StageRoute { routeId = id, targetNodeId = target, label = id };
+    sealed class GraphFixture
+    {
+        public string stageId, displayName;
+        public PointFixture[] nodes;
+        public ExpeditionMapData Data() => new ExpeditionMapData("start", System.Linq.Enumerable.Select(nodes,
+            n => new ExpeditionPointData(n.nodeId, n.displayName, n.kind, n.content, n.endingId,
+                System.Linq.Enumerable.Select(n.routes, r => new ExpeditionConnectionData(r.routeId, r.targetNodeId)))));
+        public void Validate() => Data();
+        public ExpeditionRun CreateRun(string family = null)
+        {
+            var run = new ExpeditionRun(stageId, GameTextFormatter.Format(displayName, "FamilyName", family), "GameScene");
+            run.Initialize(Data());
+            return run;
+        }
+    }
+    sealed class PointFixture
+    {
+        public string nodeId, displayName, endingId;
+        public ExpeditionPointKind kind;
+        public StageContent content;
+        public ConnectionFixture[] routes;
+    }
+    sealed class ConnectionFixture { public string routeId, targetNodeId, label; }
+    static PointFixture Node(string id, ExpeditionPointKind kind, params ConnectionFixture[] routes) =>
+        new PointFixture { nodeId = id, displayName = id, kind = kind, routes = routes };
+    static ConnectionFixture Route(string id, string target) => new ConnectionFixture { routeId = id, targetNodeId = target, label = id };
 }

@@ -1,21 +1,18 @@
 using System;
 using System.Collections.Generic;
 using CWFramework;
-using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
 
-/// <summary>원정 내부 지도 UI. 이동 요청만 전달하며 지점 완료나 전투 실행은 진행 컨트롤러가 담당합니다.</summary>
+/// <summary>원정 월드 지도. 이동 요청만 전달하며 지점 완료나 전투 실행은 진행 컨트롤러가 담당합니다.</summary>
 [DisallowMultipleComponent]
-public sealed class ExpeditionMapPanel : CBehaviour
+public sealed class ExpeditionMap : CBehaviour
 {
-    [SerializeField] private string stageId;
-    [SerializeField] private UIPanel panel;
-    [SerializeField] private TMP_Text stageNameText;
-    [SerializeField] private TMP_Text currentNodeText;
-    [SerializeField] private ExpeditionMapPoint[] points = Array.Empty<ExpeditionMapPoint>();
+    [SerializeField] private ExpeditionMapPoint startPoint;
+    [SerializeField] private SpriteRenderer background;
+    public SpriteRenderer Background => background;
+    private ExpeditionMapPoint[] points = Array.Empty<ExpeditionMapPoint>();
 
-    public bool IsOpen { get; private set; }
+    public bool IsVisible { get; private set; }
     public bool IsBusy { get; private set; }
     public ExpeditionRun Run { get; private set; }
     /// <summary>routeId를 전달합니다. 수신 측에서 ChooseRoute 및 콘텐츠 실행 후 SetBusy(false)를 호출합니다.</summary>
@@ -26,31 +23,65 @@ public sealed class ExpeditionMapPanel : CBehaviour
 
     protected override void OnAwake()
     {
-        if (Run != null) return; // 비활성 패널을 Open으로 처음 여는 경우를 보존합니다.
-        if (panel == null) panel = GetComponent<UIPanel>();
-        if (panel != null) panel.SetVisibleImmediate(false);
+        if (Run == null) gameObject.SetActive(false);
     }
 
-    public void Open(ExpeditionRun run)
+    /// <summary>프리팹 설정 또는 생성된 포인트를 실행용 데이터로 복사합니다. 표시 상태를 변경하지 않습니다.</summary>
+    public ExpeditionMapData BuildMapData()
+    {
+        points = GetComponentsInChildren<ExpeditionMapPoint>(true);
+        var members = new HashSet<ExpeditionMapPoint>(points);
+        if (startPoint == null || !members.Contains(startPoint) || startPoint.IsEnding)
+            throw new InvalidOperationException("맵 내부의 시작 포인트를 지정해야 합니다.");
+        var data = new List<ExpeditionPointData>(points.Length);
+        foreach (var point in points)
+        {
+            if (point.Connections == null) throw new InvalidOperationException("연결 목록이 비어 있습니다.");
+            var routes = new List<ExpeditionConnectionData>();
+            foreach (var connection in point.Connections)
+            {
+                if (connection == null || connection.target == null || !members.Contains(connection.target))
+                    throw new InvalidOperationException("경로 목적지는 같은 맵 내부의 포인트여야 합니다.");
+                routes.Add(ExpeditionConnectionData.FromEndpoints(point.NodeId, connection.target.NodeId));
+            }
+            data.Add(new ExpeditionPointData(point.NodeId, point.DisplayName,
+                point == startPoint ? ExpeditionPointKind.Start : point.IsEnding ? ExpeditionPointKind.Ending : ExpeditionPointKind.Normal,
+                point.Content, point.EndingId, routes));
+        }
+        return new ExpeditionMapData(startPoint.NodeId, data);
+    }
+
+    /// <summary>생성된 자식 포인트의 연결 설정을 마친 뒤, Show 전에 시작점을 지정합니다.</summary>
+    public void SetStartPoint(ExpeditionMapPoint point)
+    {
+        if (Run != null) throw new InvalidOperationException("진행 중인 맵의 시작점은 변경할 수 없습니다.");
+        startPoint = point;
+    }
+
+    public void Show(ExpeditionRun run)
     {
         if (run == null) throw new ArgumentNullException(nameof(run));
         if (!enabled) throw new InvalidOperationException("비활성 지도 컴포넌트를 열 수 없습니다.");
-        if (panel == null) panel = GetComponent<UIPanel>();
-        if (panel == null || points == null || string.IsNullOrWhiteSpace(stageId) ||
-            stageId != run.StageId || run.CurrentNodeId == null)
-            throw new InvalidOperationException("지도 패널·스테이지 ID·지점과 초기화된 원정을 확인하세요.");
+        var mapData = BuildMapData();
+        // 시각 설정까지 검증한 뒤 진행 데이터를 변경합니다.
+        var colliders = new HashSet<Collider2D>();
+        foreach (var point in points)
+        {
+            point.Initialize();
+            if (!colliders.Add(point.HitArea))
+                throw new InvalidOperationException("지도 지점의 클릭 영역이 중복되었습니다.");
+        }
+        if (!run.IsInitialized) run.Initialize(mapData);
 
         var nextNodes = new Dictionary<string, ExpeditionRun.MapNodeInfo>(StringComparer.Ordinal);
         foreach (var node in run.GetMapNodes())
             nextNodes.Add(node.NodeId, node);
         var pointById = new Dictionary<string, ExpeditionMapPoint>(StringComparer.Ordinal);
-        var buttons = new HashSet<Button>();
         foreach (var point in points)
         {
             if (point == null) throw new InvalidOperationException("지도 지점 참조가 비어 있습니다.");
-            point.Initialize();
-            if (!nextNodes.ContainsKey(point.NodeId) || pointById.ContainsKey(point.NodeId) || !buttons.Add(point.Button))
-                throw new InvalidOperationException("지도 지점의 ID·버튼이 중복되었거나 원정에 없는 지점입니다.");
+            if (!nextNodes.ContainsKey(point.NodeId) || pointById.ContainsKey(point.NodeId))
+                throw new InvalidOperationException("지도 지점의 ID·클릭 영역이 중복되었거나 원정에 없는 지점입니다.");
             pointById.Add(point.NodeId, point);
         }
         if (pointById.Count != nextNodes.Count)
@@ -65,8 +96,8 @@ public sealed class ExpeditionMapPanel : CBehaviour
         if (Run != run) IsBusy = false;
         Run = run;
         nodes = nextNodes;
-        IsOpen = true;
-        panel.SetVisibleImmediate(true);
+        IsVisible = true;
+        gameObject.SetActive(true);
         Refresh();
     }
 
@@ -76,7 +107,6 @@ public sealed class ExpeditionMapPanel : CBehaviour
         if (Run == null || nodes == null) return;
         var knownRoutes = new HashSet<string>(Run.Exploration.DiscoveredRoutes, StringComparer.Ordinal);
         var visited = new HashSet<string>(Run.VisitedNodes, StringComparer.Ordinal);
-        var completed = new HashSet<string>(Run.CompletedNodes, StringComparer.Ordinal);
         var availableNodes = new HashSet<string>(StringComparer.Ordinal);
         foreach (var route in Run.AvailableRoutes)
             availableNodes.Add(route.TargetNodeId);
@@ -91,25 +121,21 @@ public sealed class ExpeditionMapPanel : CBehaviour
                 visibleNodes.Add(route.TargetNodeId);
             }
         }
-        bool inputEnabled = IsOpen && isActiveAndEnabled && !IsBusy && RouteRequested != null;
+        bool inputEnabled = IsVisible && isActiveAndEnabled && !IsBusy && RouteRequested != null;
         foreach (var point in points)
         {
             string id = point.NodeId;
             bool discovered = Run.Exploration.KnowsNode(id);
             var state = id == Run.CurrentNodeId ? ExpeditionMapPointState.Current :
                 availableNodes.Contains(id) ? ExpeditionMapPointState.Available :
-                completed.Contains(id) ? ExpeditionMapPointState.Completed :
-                visited.Contains(id) ? ExpeditionMapPointState.Visited :
-                discovered || visibleNodes.Contains(id) ? ExpeditionMapPointState.Unvisited : ExpeditionMapPointState.Hidden;
-            point.SetPresentation(nodes[id].DisplayName, discovered, state, inputEnabled, completed.Contains(id));
+                discovered || visibleNodes.Contains(id) ? ExpeditionMapPointState.Idle : ExpeditionMapPointState.Hidden;
+            point.SetPresentation(discovered, state, inputEnabled);
         }
-        if (stageNameText != null) stageNameText.text = Run.StageName;
-        if (currentNodeText != null) currentNodeText.text = Run.CurrentNodeName;
     }
 
     private void RequestMove(ExpeditionMapPoint point)
     {
-        if (!IsOpen || !isActiveAndEnabled || IsBusy || Run == null || RouteRequested == null) return;
+        if (!IsVisible || !isActiveAndEnabled || IsBusy || Run == null || RouteRequested == null) return;
         // 화면 표시 이후 진행 상태가 바뀌었더라도 현재 경로를 기준으로 다시 판단합니다.
         foreach (var route in Run.AvailableRoutes)
         {
@@ -121,22 +147,28 @@ public sealed class ExpeditionMapPanel : CBehaviour
         Refresh();
     }
 
+    public bool TryGetPoint(string nodeId, out ExpeditionMapPoint point)
+    {
+        point = Array.Find(points, candidate => candidate != null && candidate.NodeId == nodeId);
+        return point != null;
+    }
+
     public void SetBusy(bool value)
     {
         IsBusy = value;
         Refresh();
     }
 
-    public void HideImmediate()
+    public void Hide()
     {
-        IsOpen = false;
+        IsVisible = false;
         Refresh();
-        if (panel != null) panel.SetVisibleImmediate(false);
+        gameObject.SetActive(false);
     }
 
     protected override void OnDisabled()
     {
-        IsOpen = false;
+        IsVisible = false;
         Refresh();
     }
 

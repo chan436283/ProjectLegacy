@@ -14,13 +14,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EnemyGroup
   groupId: goblins1
   placements:
-  - prefab: {fileID: 0}
+  - prefab: {fileID: 3848303109665735434, guid: 280edcc28a43a465ba88c483b8f1acf3, type: 3}
     row: 0
     position: 1
-  - prefab: {fileID: 0}
+  - prefab: {fileID: 3848303109665735434, guid: 280edcc28a43a465ba88c483b8f1acf3, type: 3}
     row: 0
     position: 2
-  - prefab: {fileID: 0}
-    row: 0
-    position: 3
+  - prefab: {fileID: 3848303109665735434, guid: 471a0d081a21142039770f339d9c54c1, type: 3}
+    row: 1
+    position: 1
   legacyEnemies: []

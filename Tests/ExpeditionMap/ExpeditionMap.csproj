@@ -5,7 +5,9 @@
     <NuGetAudit>false</NuGetAudit>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="../../Assets/Scripts/UI/Expedition/ExpeditionMap*.cs" />
+    <Compile Include="../../Assets/Scripts/Expedition/ExpeditionMap.cs" />
+    <Compile Include="../../Assets/Scripts/Expedition/ExpeditionMapConnection.cs" />
+    <Compile Include="../../Assets/Scripts/Expedition/ExpeditionMapPoint.cs" />
     <Compile Include="../../Assets/Scripts/GameData/ExpeditionRun.cs" />
     <Compile Include="../../Assets/Scripts/GameData/StageExplorationData.cs" />
     <Compile Include="../../Assets/Scripts/Stage/*.cs" />

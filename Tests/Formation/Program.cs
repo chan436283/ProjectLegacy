@@ -110,6 +110,22 @@ static class Program
             controller.Participants[1] != controller.Participants[2] && prefab.FormationPosition == 1,
             "repeated prefab creates independent instances without changing asset");
         Reject(() => controller.StartBattle(encounter));
+        Reject(controller.ResetBattle);
+        var retainedAlly = controller.Participants[0];
+        foreach (var unit in controller.Participants)
+            if (unit.Side == BattleSide.Enemy) unit.Stats.IsDead = true;
+        controller.BeginAction(controller.CurrentUnit);
+        controller.CompleteCurrentTurn();
+        Check(controller.State == BattleState.Victory, "encounter reaches terminal victory");
+        int removedBeforeReset = CWFramework.CBehaviour.Destroyed;
+        controller.ResetBattle();
+        Check(controller.State == BattleState.Idle && controller.CurrentUnit == null &&
+            controller.Participants.Count == 1 && controller.Participants[0] == retainedAlly &&
+            CWFramework.CBehaviour.Destroyed == removedBeforeReset + 2,
+            "reset removes spawned enemies and retains existing ally for next encounter");
+        controller.StartBattle(encounter);
+        Check(controller.State == BattleState.WaitingForAction && controller.Participants.Count == 3,
+            "same battle controller can start a second encounter");
         var occupied = Controller(Formation(), Unit(BattleSide.Ally));
         occupied.AddParticipant(Unit());
         Reject(() => occupied.StartBattle(encounter));

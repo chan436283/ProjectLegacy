@@ -3,7 +3,7 @@
 현재 흐름: 마을 원정 버튼 → 같은 씬의 지도 패널 → 지점 아이콘 선택 → 중앙 상단 이름 확인 → 출정 버튼 → 해당 진입 씬.
 원정 버튼과 지도 닫기는 씬 로드나 저장을 하지 않는다. 출정 버튼을 누르면 진행 데이터를
 저장하고, 스테이지의 `entryScene`을 로드한다. 현재 예제는 기존 `GameScene` 전투
-프로토타입으로 진입한다. 원정 내 분기·이벤트·귀환 결과 처리는 아직 구현하지 않는다.
+프로토타입으로 진입한다. 원정 씬에는 ExpeditionController를 연결해 맵 이동·전투·기본 이벤트·귀환을 진행한다.
 
 ## Unity 연결
 
@@ -94,57 +94,50 @@ Pulse Target을 비우면 애니메이션을 사용하지 않는다. 클릭 영�
 선택 변경만으로 이미 실행 중인 트윈을 재시작하지 않는다. 선택 인디케이터는 별도로 유지한다.
 `MapPoint.SetAvailable()`을 직접 호출해도 패널에 반영된다.
 
-## 고정 스테이지 정의와 진행 API
+## 맵 프리팹 정의와 진행 API
 
-`StageDefinition` SO의 `nodes`는 스테이지 내부 직렬화 목록이다. 노드별 에셋은 만들지
-않으며, 전투·이벤트에서 재사용할 정의만 `StageContent` SO로 분리했다.
-StageContent는 추상 기반 클래스다. BattleContent와 EventContent가 상속하며 Type을 결정한다.
-Create > ProjectLegacy > Expedition > Battle Content / Event Content로 만들고 contentId를 지정한다.
-이벤트 선택지, 실제 전투 실행/승리 콜백은 이후 콘텐츠 구현에서 연결해야 한다.
-휴식은 노드 콘텐츠가 아닌 원정 자원을 소비하는 별도 기능으로 구현할 예정이다.
+StageDefinition은 stageId, displayName, entryScene, mapPrefab을 보관한다.
+별도의 StageNode/StageRoute와 nodes/startNodeId 설정은 제거했다.
+맵 프리팹의 ExpeditionMap이 Start Point를 지정하고 자식 ExpeditionMapPoint를 자동 수집한다.
+각 포인트가 Node Id, 선택적 Display Name, Content, Is Ending/Ending Id, Connections를 보관한다.
+Connections에는 같은 맵 안의 포인트인 Target만 지정한다. 경로 ID는 출발/목적지 ID로 자동 생성한다.
+콘텐츠는 BattleContent/EventContent 에셋으로 연결하며, 비어 있으면 이동 전용 포인트다.
+시작점이나 종료점에도 콘텐츠를 연결할 수 있다. 보스전 종료점은 Is Ending과 BattleContent를 함께 설정한다.
 
-노드의 kind는 StageNodeType: Start(0), Normal(1), Ending(4).
-콘텐츠의 Type은 StageContentType: Battle(1), Event(2). 인스펙터에서 중복 지정하지 않는다.
-기존 콘텐츠 에셋과 시작·종료 노드의 직렬화 숫자는 유지한다.
-스테이지는 startNodeId와 nodes를 설정하고, 각 노드의 routes에 고유 routeId,
-targetNodeId, 선택지 label을 입력한다. 종착점마다 고유 endingId를 지정한다.
-Normal 노드는 콘텐츠 SO가 필수다. Start와 Ending은 콘텐츠를 선택적으로 연결한다.
-노드의 구조적 종류와 콘텐츠 종류는 독립적이며 Ending + Battle로 보스전 엔딩을 구성할 수 있다.
-시작은 하나, 종착점은 한 개 이상이며 순환·되돌아가기는 지원하지 않는다.
-합류는 허용한다. 노드 ID와 경로 ID는 스테이지 안에서 고유하고 앞뒤 공백이 없어야 한다.
-이름이나 목록 순서를 바꿔도 ID는 유지한다. 출시 후 ID 변경/삭제는 저장 마이그레이션이 필요하다.
+설정은 맵 프리팹 한 곳에서 작성한다. BuildMapData는 이를 검증된 실행용 ExpeditionMapData로 복사한다.
+중복/빈 ID, 외부 목적지, 순환, 미도달 포인트, 종료점 외 막다른 길, 잘못된 콘텐츠를 거절한다.
+시작점 하나와 종료점 한 개 이상이 필요하며 합류를 허용한다. 기존과 같이 순환은 지원하지 않는다.
+이름은 선택 사항이다. 콘텐츠가 없는 일반 포인트도 허용한다.
 
-스테이지 Inspector 컴포넌트 메뉴의 Validate Stage로 검증할 수 있다. 출정 시에도
-동일 검증을 수행한다. 중복 ID, 없는 대상, 순환, 미도달 노드, 종착점 외 막다른 길,
-누락된 필수 콘텐츠, 잘못된 콘텐츠 ID·종류 등을 거절한다. DAG이며 모든 노드가 도달 가능하고 모든 비종착점에
-나가는 길이 있으므로 각 경로는 결국 종착점으로 이어진다.
-
-콘텐츠 예제는 `Assets/Data/Expedition/StageContents`에 있고,
-스테이지 에셋은 `Assets/Data/Expedition/Stages`에 있다.
-새 스테이지 기본값은 시작→종착점만 있는 최소 지도다.
+StageDefinition의 Validate Stage 메뉴와 출정 시 맵 구성을 검증한다.
+기존 SO 에셋의 노드 설정은 자동 이전하지 않는다. Unity에서 맵 프리팹에 연결·콘텐츠를 옮기고
+StageDefinition의 Map Prefab을 연결해야 한다. 노드/종료 ID를 유지하면 해당 발견 기록이 연결된다. 이전 수동 경로 ID는 자동 이전하지 않으며 출발점 재방문 시 새 ID로 기록된다.
+자세한 설정은 `Assets/Scripts/Expedition/README.md`를 참고한다.
 
 ```csharp
-// 실제 출정에서는 TownController가 CreateRun과 StartExpedition을 호출한다.
+// TownController: 메타데이터 생성 및 누적 기록 연결. 아직 시작 노드에 진입하지 않는다.
 var run = stage.CreateRun(GameSession.Current?.FamilyName);
 GameSession.StartExpedition(run);
-// 콘텐츠가 없는 시작 노드는 자동 완료된다.
-// 시작 콘텐츠가 있다면 실행 후 CompleteCurrentNode를 호출해야 한다.
-run.ChooseRoute(run.AvailableRoutes[0].RouteId);
-// CurrentContent를 종류별 실행기에 전달하고, 성공적으로 끝났을 때만 호출한다.
-string enteredNodeId = run.CurrentNodeId;
-run.CompleteCurrentNode(enteredNodeId);
-// 전투 패배/취소 시에는 완료 호출을 하지 않는다.
-GameSession.Save(); // 발견 기록을 디스크에 보존할 시점에 호출한다.
+// GameScene 진행 컨트롤러: 실제 맵 인스턴스를 만든 뒤 원정을 초기화한다.
+var map = Instantiate(run.MapPrefab, mapRoot);
+map.RouteRequested += OnRouteRequested;
+map.Show(run);
+// 콘텐츠 실행기가 전투 승리/이벤트 완료 후 호출한다.
+// run.CompleteCurrentNode(enteredNodeId);
 ```
 
-`ChooseRoute`는 현재 노드가 완료되고 실제 연결된 경로일 때만 성공한다.
-콘텐츠가 없는 시작·종착점만 진입 시 자동 완료한다.
-콘텐츠가 있으면 노드 종류와 무관하게 ResolvingNode에서 외부 실행기의 명시적 완료를 기다린다.
+`CreateRun` 직후 Phase는 Uninitialized이고 AvailableRoutes는 비어 있다.
+첫 Show가 맵 데이터를 복사하고 시작점에 진입한다. 같은 원정을 다시 Show해도 진행을 초기화하지 않는다.
+ChooseRoute는 현재 콘텐츠 처리가 끝났고 현재 지점에 연결된 경로일 때만 성공한다.
+콘텐츠가 없는 포인트는 자동 완료한다. 콘텐츠가 있으면 ResolvingNode에서 외부 실행기의 완료를 기다린다.
 완료 콜백의 nodeId가 현재 노드와 다르거나 이미 완료되었으면 거절한다.
-종착점 완료 시 Phase=Completed, EndingId와 엔딩 발견 기록이 설정되고 추가 이동은 거절한다.
-보스전 패배·취소 시에는 CompleteCurrentNode를 호출하지 않으며 엔딩도 기록되지 않는다.
-AvailableRoutes에는 현재 선택 가능한 경로만 노출된다. 에셋의 연결/이름/종류는 출발 시
-복사하므로 진행 중 에셋 변경이 현재 경로를 바꾸지 않는다. 콘텐츠 SO 참조는 공유한다.
+종료점 콘텐츠가 완료되면 Phase=Completed, EndingId와 발견 기록을 설정하고 이동을 막는다.
+전투 패배/취소 시 CompleteCurrentNode를 호출하지 않는다.
+연결/이름/종류는 초기화 시 복사하고 콘텐츠 SO 참조는 공유한다.
+
+절차적 생성기는 포인트의 Configure와 맵의 SetStartPoint로 설정한 뒤 Show할 수 있다.
+화면 없이 생성한 ExpeditionMapData를 run.Initialize(data)에 전달하는 방식도 지원한다.
+콘텐츠 실행·화면 전환·귀환은 ExpeditionController가 담당한다. 절차적 맵 생성 알고리즘은 아직 없다.
 
 ## 발견 기록과 저장
 
@@ -156,7 +149,7 @@ GameSession.StartExpedition이 현재 가문의 기록을 연결한다. UI의 �
 
 노드 진입 시 그 노드와 나가는 경로의 존재를 발견한다. 목적지의 종류는 실제 방문 전까지
 발견되지 않는다. 이미 발견한 곳도 다음 원정에서는 다시 완료해야 한다. UI는
-Exploration.KnowsNode로 공개 여부를 판단해야 하며 SO 자체는 전체 설계 정보를 담고 있다.
+Exploration.KnowsNode로 공개 여부를 판단하며 맵 프리팹이 전체 설계 정보를 담고 있다.
 
 저장 버전은 2이며 누적 탐험 기록을 저장한다. 버전 1은 빈 탐험 기록으로 읽을 수 있다.
 발견 시마다 자동 디스크 저장하지는 않는다. 원정 실행기가 안전한 완료 지점이나 귀환 시
@@ -211,7 +204,7 @@ battleController.StartBattle(encounter); // 적 생성 → 열/자리 전달 →
 적 프리팹 참조·열·자리 번호는 읽기 전용 값으로 복사하지만 프리팹 에셋 자체는 공유 참조다. 에셋을 전투 참가자로 직접 사용하거나
 HP·상태 이상을 에셋에 기록하지 않는다. 콘텐츠와 그룹 검증은 출정 및 편성 생성 시 수행한다.
 StartBattle(encounter)는 적을 생성하고 초기 자리를 설정한 뒤 전투를 시작한다. 배치 검증 실패 시 생성한 적을 정리하며 기존 참가자는 이동하지 않는다.
-원정 콘텐츠 실행기에서 이 API를 호출하는 흐름, 배경 배치, 도주 실행, 보상 지급은 아직 구현하지 않았다.
+ExpeditionController가 전투 시작·배경 배치·승패 후 맵 복귀를 연결한다. 도주 실행과 보상 지급은 아직 구현하지 않았다.
 보상 시스템과 별도의 일반전/보스전/이벤트전 enum은 이번 구조에 추가하지 않았다.
 
 ExampleAmbush는 BattleContent, ExampleTraveler는 EventContent로 마이그레이션했다.

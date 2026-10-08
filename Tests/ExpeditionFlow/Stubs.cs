@@ -6,6 +6,7 @@ namespace UnityEngine
 {
     public class GameObject
     {
+        public Transform transform = new();
         public bool activeSelf = true;
         public void SetActive(bool value) => activeSelf = value;
     }
@@ -14,7 +15,7 @@ namespace UnityEngine
         public bool enabled = true;
         public GameObject gameObject = new();
         public bool isActiveAndEnabled => enabled && gameObject.activeSelf;
-        public Transform transform = new Transform();
+        public Transform transform => gameObject.transform;
         public Dictionary<Type, object> Components = new();
         public object[] children = Array.Empty<object>();
         public T[] GetComponentsInChildren<T>(bool includeInactive) => System.Linq.Enumerable.ToArray(System.Linq.Enumerable.OfType<T>(children));
@@ -38,6 +39,7 @@ namespace UnityEngine
     }
     public class Transform
     {
+        public Vector3 position;
         public Vector3 localPosition;
         public Vector3 localScale = new(1,1,1);
         public Transform parent;
@@ -86,6 +88,16 @@ namespace CWFramework
     public class CBehaviour : UnityEngine.MonoBehaviour
     {
         protected virtual void OnAwake() { }
+        protected virtual void OnStarted() { }
+        public static Func<object, object> InstantiateFactory;
+        protected static T Instantiate<T>(T original, UnityEngine.Transform parent) where T : class
+        {
+            var result = (T)(InstantiateFactory?.Invoke(original) ?? original);
+            if (result is UnityEngine.MonoBehaviour component) component.transform.parent = parent;
+            if (result is UnityEngine.GameObject go) go.transform.parent = parent;
+            return result;
+        }
+        protected static void Destroy(UnityEngine.GameObject obj) { obj.SetActive(false); }
         protected virtual void OnEnabled() { }
         protected virtual void OnDisabled() { }
         protected virtual void OnReleased() { }
@@ -117,4 +129,67 @@ namespace DG.Tweening
             return target.lastTween = new Tween();
         }
     }
+}
+
+namespace UnityEngine
+{
+    public static class Application { public static bool CanLoad = true; public static bool CanStreamedLevelBeLoaded(string scene) => CanLoad; }
+    public static class Debug { public static void LogException(Exception ex, object context) { } }
+}
+namespace UnityEngine.SceneManagement
+{
+    public static class SceneManager
+    {
+        public static bool FailLoad;
+        public static int Loads;
+        public static object LoadSceneAsync(string scene) { Loads++; return FailLoad ? null : new object(); }
+    }
+}
+namespace UnityEngine.UI
+{
+    public class Button
+    {
+        public bool interactable;
+        public ButtonEvent onClick = new();
+        public sealed class ButtonEvent
+        {
+            private event Action Clicked;
+            public void AddListener(Action listener) => Clicked += listener;
+            public void RemoveListener(Action listener) => Clicked -= listener;
+            public void Invoke() => Clicked?.Invoke();
+        }
+    }
+}
+namespace TMPro { public class TMP_Text { public string text; } }
+public static class GameSession
+{
+    public static object Current;
+    public static ExpeditionRun CurrentExpedition;
+    public static bool FailSave;
+    public static int Saves;
+    public static void Save() { if (FailSave) throw new InvalidOperationException("save failed"); Saves++; }
+    public static void EndExpedition() => CurrentExpedition = null;
+}
+public sealed class ExpeditionMapCameraController : UnityEngine.MonoBehaviour
+{
+    public bool InputEnabled;
+    public void SetInputEnabled(bool value) => InputEnabled = value;
+    public void SetMapBackground(UnityEngine.SpriteRenderer background) { }
+}
+public sealed class BattleController : UnityEngine.MonoBehaviour
+{
+    public BattleState State = BattleState.Idle;
+    public bool AutoStart = true, FailStart;
+    public int Starts, Resets;
+    public event Action<BattleState> BattleEnded;
+    public void SetStartAutomatically(bool value) => AutoStart = value;
+    public void StartBattle(BattleEncounter encounter, UnityEngine.Transform parent)
+    {
+        if (FailStart) throw new InvalidOperationException("battle setup failed");
+        if (State != BattleState.Idle) throw new InvalidOperationException("not idle");
+        Starts++;
+        State = BattleState.WaitingForAction;
+    }
+    public void Finish(BattleState state) { State = state; BattleEnded?.Invoke(state); }
+    public void ResetBattle() { State = BattleState.Idle; Resets++; }
 }

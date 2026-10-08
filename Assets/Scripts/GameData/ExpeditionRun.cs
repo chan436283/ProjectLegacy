@@ -1,14 +1,16 @@
 using System;
 using System.Collections.Generic;
 
-/// <summary>출발 시 확정한 원정 정보입니다. 현재는 메모리에서만 유지합니다.</summary>
+/// <summary>맵 로드 후 초기화하는 원정 진행 정보입니다. 현재는 메모리에서만 유지합니다.</summary>
 public sealed class ExpeditionRun
 {
     public string StageId { get; }
     public string StageName { get; }
     public string EntryScene { get; }
+    public ExpeditionMap MapPrefab { get; }
+    public bool IsInitialized => current != null;
 
-    public ExpeditionRun(string stageId, string stageName, string entryScene)
+    public ExpeditionRun(string stageId, string stageName, string entryScene, ExpeditionMap mapPrefab = null)
     {
         if (string.IsNullOrWhiteSpace(stageId) || string.IsNullOrWhiteSpace(stageName) ||
             string.IsNullOrWhiteSpace(entryScene))
@@ -16,16 +18,17 @@ public sealed class ExpeditionRun
         StageId = stageId.Trim();
         StageName = stageName.Trim();
         EntryScene = entryScene.Trim();
+        MapPrefab = mapPrefab;
+        Exploration = new StageExplorationData(StageId);
     }
 
-    public enum RunPhase { ResolvingNode, ChoosingRoute, Completed }
+    public enum RunPhase { Uninitialized = -1, ResolvingNode = 0, ChoosingRoute = 1, Completed = 2 }
     public sealed class RouteOption
     {
         public string RouteId { get; }
         public string TargetNodeId { get; }
-        public string Label { get; }
-        internal RouteOption(StageRoute route)
-        { RouteId = route.routeId; TargetNodeId = route.targetNodeId; Label = route.label; }
+        internal RouteOption(ExpeditionConnectionData route)
+        { RouteId = route.routeId; TargetNodeId = route.targetNodeId; }
     }
 
     /// <summary>지도 UI용 읽기 전용 정보. 공개 여부는 Exploration으로 판단합니다.</summary>
@@ -39,7 +42,7 @@ public sealed class ExpeditionRun
         { NodeId = nodeId; DisplayName = displayName; Routes = routes; }
     }
 
-    /// <summary>출발 시 확정한 경로를 반환합니다. 이후 스테이지 에셋 편집의 영향을 받지 않습니다.</summary>
+    /// <summary>맵 초기화 시 확정한 경로를 반환합니다. 이후 포인트 설정 변경의 영향을 받지 않습니다.</summary>
     public IReadOnlyList<MapNodeInfo> GetMapNodes()
     {
         var result = new List<MapNodeInfo>(graph.Count);
@@ -50,7 +53,7 @@ public sealed class ExpeditionRun
     private sealed class NodeSnapshot
     {
         public string id, name, endingId;
-        public StageNodeType kind;
+        public ExpeditionPointKind kind;
         public StageContent content;
         public List<RouteOption> routes;
     }
@@ -61,10 +64,10 @@ public sealed class ExpeditionRun
     private NodeSnapshot current;
     public string CurrentNodeId => current?.id;
     public string CurrentNodeName => current?.name;
-    public StageNodeType CurrentNodeKind => current != null ? current.kind : throw new InvalidOperationException("경로가 초기화되지 않았습니다.");
+    public ExpeditionPointKind CurrentNodeKind => current != null ? current.kind : throw new InvalidOperationException("경로가 초기화되지 않았습니다.");
     public StageContent CurrentContent => current?.content;
     public string EndingId { get; private set; }
-    public RunPhase Phase { get; private set; }
+    public RunPhase Phase { get; private set; } = RunPhase.Uninitialized;
     public StageExplorationData Exploration { get; private set; }
     public IReadOnlyList<string> VisitedNodes => visited.AsReadOnly();
     public IReadOnlyList<string> TraversedRoutes => traversed.AsReadOnly();
@@ -72,23 +75,23 @@ public sealed class ExpeditionRun
     public IReadOnlyList<RouteOption> AvailableRoutes => Phase == RunPhase.ChoosingRoute && current != null
         ? current.routes.AsReadOnly() : (IReadOnlyList<RouteOption>)Array.Empty<RouteOption>();
 
-    internal void Initialize(StageDefinition stage)
+    public void Initialize(ExpeditionMapData map)
     {
         if (current != null) throw new InvalidOperationException("이미 초기화한 원정입니다.");
-        Exploration = new StageExplorationData(StageId);
-        foreach (var node in stage.nodes)
+        if (map == null) throw new ArgumentNullException(nameof(map));
+        foreach (var node in map.nodes)
         {
             var routes = new List<RouteOption>();
             foreach (var route in node.routes) routes.Add(new RouteOption(route));
             graph.Add(node.nodeId, new NodeSnapshot { id = node.nodeId, name = node.displayName,
                 kind = node.kind, content = node.content, endingId = node.endingId, routes = routes });
         }
-        Enter(stage.startNodeId);
+        Enter(map.startNodeId);
     }
 
     internal void AttachExploration(StageExplorationData record)
     {
-        if (Exploration == null) return; // 기존 메타데이터 전용 생성자 호환
+        if (record == null) throw new ArgumentNullException(nameof(record));
         record.Merge(Exploration);
         Exploration = record;
     }
@@ -111,7 +114,7 @@ public sealed class ExpeditionRun
         if (current == null || current.id != expectedNodeId || Phase != RunPhase.ResolvingNode)
             throw new InvalidOperationException("현재 처리 중인 노드만 완료할 수 있습니다.");
         completed.Add(current.id);
-        if (current.kind == StageNodeType.Ending)
+        if (current.kind == ExpeditionPointKind.Ending)
         {
             EndingId = current.endingId;
             Exploration.ReachEnding(EndingId);

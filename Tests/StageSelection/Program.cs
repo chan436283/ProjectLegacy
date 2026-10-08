@@ -33,7 +33,7 @@ static class Program
         try { GameTextFormatter.Format("text", "{Name}", "A"); }
         catch (ArgumentException) { invalidTokenRejected = true; }
         Check(invalidTokenRejected, "token names must exclude braces");
-        var template = new StageDefinition { stageId = "road", displayName = "{FamilyName} 남서 가도" };
+        var template = new StageDefinition { mapPrefab = new ExpeditionMap(), stageId = "road", displayName = "{FamilyName} 남서 가도" };
         Check(template.GetDisplayName(" 아르덴 ") == "아르덴 남서 가도", "resolve family token");
         Check(template.CreateRun("아르덴").StageName == "아르덴 남서 가도", "run stores resolved stage name");
         Check(template.GetDisplayName(null) == "이름 없는 가문 남서 가도", "missing family fallback");
@@ -53,7 +53,7 @@ static class Program
         for (int i = 0; i < 2; i++)
         {
             var point = new MapPoint();
-            Set(point, "stage", new StageDefinition { stageId = "stage" + i, displayName = "{FamilyName} 지점" + i });
+            Set(point, "stage", new StageDefinition { mapPrefab = new ExpeditionMap(), stageId = "stage" + i, displayName = "{FamilyName} 지점" + i });
             Set(point, "button", buttons[i]);
             Set(point, "available", i == 0);
             Set(point, "pulseTarget", pulseTargets[i]);

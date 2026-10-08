@@ -10,10 +10,12 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a21aab958a674618b986cc5a572fe3cd, type: 3}
-  m_Name: ExampleAmbush
+  m_Name: GoblinBattle1
   m_EditorClassIdentifier: Assembly-CSharp::BattleContent
-  contentId: example_ambush
-  description: 산적 매복 전투 (실행기 연결용 예시)
-  enemyGroups: []
+  contentId: goblin_battle_1
+  description: "\uACE0\uBE14\uB9B0 \uC804\uD22C1"
+  enemyGroups:
+  - group: {fileID: 11400000, guid: db35ca02d4e37466392d3130dcb0e8a4, type: 2}
+    weight: 0
   backgroundPrefab: {fileID: 0}
   allowEscape: 1

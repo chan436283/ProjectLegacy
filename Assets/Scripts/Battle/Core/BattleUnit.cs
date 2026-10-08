@@ -150,6 +150,14 @@ public sealed class BattleUnit : CBehaviour
         StatusesChanged?.Invoke();
     }
 
+    /// <summary>전투 종료 시 일시적 효과를 제거합니다. HP/MP를 회복하거나 부활시키지 않습니다.</summary>
+    public void ClearBattleStatuses()
+    {
+        foreach (var status in statuses) status.OnRemove(Stats);
+        statuses.Clear();
+        StatusesChanged?.Invoke();
+    }
+
     public float ReceiveDamage(float amount, BattleDamageSource source = BattleDamageSource.DirectAttack)
     {
         bool wasDefending = IsDefending;
